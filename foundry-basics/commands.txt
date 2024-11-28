@@ -1,0 +1,14 @@
+//HELPFUL COMMANDS
+
+//clear or command k = to clear terminal
+// In the terminal "X" will hide terminal and the trash icon will delete the terminal flow.
+//command + W = remove most recent block of code written in the terminak
+//command + U = Delete entire line of code 
+//command + backticks or J =  toogle terminal
+// code . = open up a new vscode blank window inside the folder
+//touch FileName = create a file
+//creating a new folder = mkdir FolderName
+//when you type cd + the name of the folder can type first letters and hit tab to autocomplete
+//cd .. = move up to parent directory/folder
+// keyword up = paste last terminal command , keep pressing and it keeps bringing last commands *up and down to navigate
+//history -c = clean the previous commands ran on the terminal 
