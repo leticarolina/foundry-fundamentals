@@ -22,3 +22,7 @@ Transaction hash: 0x2149ff2c85a2c7fb1e2b9e971d7c20f2dc81fcb5b37e39843f883914be65
 //the most explicit way to deply on anvil (but NEVER post private key special real one like that in plain text)
 // forge create SimpleStorage --rpc-url http://127.0.0.1:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
+//========== CAST
+
+//cast --to-base pasteHex dec = will convert any hex to number 
+//cast --help = for the other available commands
