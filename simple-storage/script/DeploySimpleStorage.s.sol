@@ -22,8 +22,3 @@ contract DeploySimpleStorage is Script {
         return scriptSimpleStorage;
     }
 }
-
-//Running on the terminal
-//forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key xxxx
-
-//when it return "ONCHAIN EXECUTION COMPLETE AND SUCESSFUL"

@@ -22,4 +22,11 @@ contract SimpleStorage {
         // Update the mapping with the person's name as the key and their favorite number as the value
         giveNameGetFavoriteNumber[_name] = _favoriteNumber;
     }
+
+    function getPerson(
+        uint256 index
+    ) public view returns (uint256, string memory) {
+        Person memory person = listOfPeople[index];
+        return (person.favoriteNumber, person.name);
+    }
 }
