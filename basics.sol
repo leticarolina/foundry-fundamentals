@@ -55,6 +55,7 @@ admin@MacBook-Air simple-storage %
 //if it return "ONCHAIN EXECUTION COMPLETE AND SUCESSFUL"
 
 //examples deploying wiith erc-2335
+//ps only forge supports the --account, --sender, and --broadcast options for deploying and interacting with smart contracts using named accounts. cast does not
 forge script /Users/admin/Documents/GitHub/foundry-fundamentals/simple-storage/script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --account myAnvilWallet --sender 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 --broadcast
 forge script script/DeploySimpleStorage.s.sol --rpc-url $SEPOLIA_RPC_URL --account acc2SepholiaWallet --sender 0x76cdd5a850a5b721a4f8285405d8a7ab5c3fc7e4 --broadcast
 
