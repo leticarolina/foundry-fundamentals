@@ -9,7 +9,10 @@
 //forge init = Sets up a new minimal, smart contract project using the foundry development framework. with src,test,cache
 //forge build or forge compile = compile the code aka makes machine readable
 //anvil - Create a local testnet node for deploying and testing smart contracts. It can also be used to fork other EVM compatible networks.
+//forge fmt = will auto format the solidity code 
 
+
+//--------------  DEPLOYING AND INTERACTING WITH A CONTRACT ----------------------------------------
 //DEPLYING A SMART CONTRACT FROM THE TERMINAL
 //forge create - Deploy a smart contract.
 //Example full deploy of 'Simple storage
@@ -45,17 +48,19 @@ Transaction hash: 0x2149ff2c85a2c7fb1e2b9e971d7c20f2dc81fcb5b37e39843f883914be65
 
 //example on terminal below
 
-admin@MacBook-Air simple-storage % cast wallet import myAnvilWallet --interactive
+/*
+This is a multi-line comment.
+*/
+cast wallet import myAnvilWallet --interactive
 Enter private key:
 Enter password: `myAnvilWallet` keystore was saved successfully. Address: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-admin@MacBook-Air simple-storage % 
 
-//example deploting with private key or .env (without broadcast keyword it wont send it will simulate)
+//example deploying with private key or .env (without broadcast keyword it wont send it will simulate)
 //forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --private-key xxxx --broadcast
 //if it return "ONCHAIN EXECUTION COMPLETE AND SUCESSFUL"
 
 //examples deploying wiith erc-2335
-//ps only forge supports the --account, --sender, and --broadcast options for deploying and interacting with smart contracts using named accounts. cast does not
+//ps only forge supports the --account, --sender, and --broadcast options for deploying and interacting with smart contracts using named accounts. cast does not but can use --interactive
 forge script /Users/admin/Documents/GitHub/foundry-fundamentals/simple-storage/script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --account myAnvilWallet --sender 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 --broadcast
 forge script script/DeploySimpleStorage.s.sol --rpc-url $SEPOLIA_RPC_URL --account acc2SepholiaWallet --sender 0x76cdd5a850a5b721a4f8285405d8a7ab5c3fc7e4 --broadcast
 
@@ -94,12 +99,22 @@ authorizationList
 to                      0x5FbDB2315678afecb367f032d93F642f64180aa3
 
 //checking interaction I just sent (cast call) with the getter function
-admin@MacBook-Air simple-storage % cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "getPerson(uint256)(uint256,string)" 0
+cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "getPerson(uint256)(uint256,string)" 0
 //it return 
 1997
 "Leticia"
+//with interactive 
+cast send 0xd730Ea341f990900cC5f55AC510D02aE608EFdE9 "addPerson(string,uint256)" "Leticia" 1997 --rpc-url $SEPOLIA_RPC_URL --interactive
+https://sepolia.etherscan.io/tx/0x07748fe845031cec4d60bca8d61fd44b6309ea59c7c59c09c90389408adf9cc3 
+
 
 //if it returns in hex need to convert, However, the method of conversion depends on the type of data you're working with
 //cast --to-base paste the pastwTheHex dec
 
 //my first contract posted on sepolia https://sepolia.etherscan.io/tx/0x512bf06d8735cd88a07fa53a3a2fb3872be4086e01b6f38f65a65e0bf9124d0b 
+
+// --------------------------- verify a smart contract on ethereum -------------------
+//i just did it can check here https://sepolia.etherscan.io/address/0xd730ea341f990900cc5f55ac510d02ae608efde9#code
+followed this tutorial but...= https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/verify-smart-contract-etherscan?lesson_format=video
+
+//
