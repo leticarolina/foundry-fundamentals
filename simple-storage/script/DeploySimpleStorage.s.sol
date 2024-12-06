@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 //https://book.getfoundry.sh/tutorials/best-practices#scripts
-pragma solidity 0.8.18;
+pragma solidity ^0.8.18;
 
 //importing this for it to use the functionalities foundry has as a script
 import {Script} from "forge-std/Script.sol";

@@ -45,7 +45,8 @@ Transaction hash: 0x2149ff2c85a2c7fb1e2b9e971d7c20f2dc81fcb5b37e39843f883914be65
 
 //account 2 sepholia
 `acc2SepholiaWallet` keystore was saved successfully. Address: 0x76cdd5a850a5b721a4f8285405d8a7ab5c3fc7e4
-
+//acount zksync
+`acc2ZkSync` keystore was saved successfully. Address: 0x76cdd5a850a5b721a4f8285405d8a7ab5c3fc7e4
 //example on terminal below
 
 /*
@@ -55,7 +56,7 @@ cast wallet import myAnvilWallet --interactive
 Enter private key:
 Enter password: `myAnvilWallet` keystore was saved successfully. Address: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 
-//example deploying with private key or .env (without broadcast keyword it wont send it will simulate)
+//--------------------------example deploying with private key or .env (without broadcast keyword it wont send it will simulate)
 //forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --private-key xxxx --broadcast
 //if it return "ONCHAIN EXECUTION COMPLETE AND SUCESSFUL"
 
@@ -117,4 +118,14 @@ https://sepolia.etherscan.io/tx/0x07748fe845031cec4d60bca8d61fd44b6309ea59c7c59c
 //i just did it can check here https://sepolia.etherscan.io/address/0xd730ea341f990900cc5f55ac510d02ae608efde9#code
 followed this tutorial but...= https://updraft.cyfrin.io/courses/foundry/foundry-simple-storage/verify-smart-contract-etherscan?lesson_format=video
 
-//
+//-------------------------------------------DEPLOYTING TO L2 ZK SYNC -------------------------------------------
+//instructions 
+// https://foundry-book.zksync.io/getting-started/installation 
+//didnt work yet
+
+//deployes to sepolia via alchemy
+##### sepolia
+✅  [Success]Hash: 0x8f43a4d265518451b8a175a486f0e89d7c99bd9075aa263e77369e2494fb6916
+Contract Address: 0x2db40c20f8e1FD4F76fE180B84387FF7727cfAD8
+Block: 7219577
+Paid: 0.000002299497376581 ETH (390987 gas * 0.005881263 gwei)
