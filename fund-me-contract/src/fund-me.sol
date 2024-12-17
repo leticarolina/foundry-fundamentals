@@ -2,10 +2,6 @@
 
 pragma solidity ^0.8.18;
 
-//get funds from users
-//set a minimum value in 5USD
-//be able to withdraw funds
-
 import {Converter} from "./Converter.sol";
 using Converter for uint256;
 
