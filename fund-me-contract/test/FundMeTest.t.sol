@@ -3,12 +3,14 @@ pragma solidity ^0.8.18;
 
 import {Test, console} from "forge-std/Test.sol";
 import {FundMe} from "../src/fund-me.sol";
+import {FundMeScript} from "../script/FundMe.s.sol";
 
 contract FundMeTest is Test {
     FundMe fundMe;
 
     function setUp() external {
-        fundMe = new FundMe();
+        FundMeScript deployFundMe = new FundMeScript();
+        fundMe = deployFundMe.run();
     }
 
     //here testing if the variable MINIMUM_VALUE_USD is actually returning 5
@@ -19,11 +21,11 @@ contract FundMeTest is Test {
     }
 
     //checking if the sender of the contract will be set to the owner
-    function testIsTheContractOwner() public {
+    function testIsTheContractOwner() public view {
         // forge test -vv  the number of console.log we want to return
         console.log(fundMe.i_owner()); //address that was test deployed
         console.log(msg.sender); //the actualm owner address
-        assertEq(fundMe.i_owner(), address(this));
+        assertEq(fundMe.i_owner(), msg.sender);
     }
 }
 

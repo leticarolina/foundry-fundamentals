@@ -3,12 +3,14 @@
 pragma solidity ^0.8.18;
 
 import {Converter} from "./Converter.sol";
+import {AggregatorV3Interface} from "../lib/chainlink-brownie-contracts/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+
 using Converter for uint256;
 
 // you can define custom errors to provide meaningful descriptions for conditions that fail in your smart contract
 //error is the keyword used to define a custom error.
 //notOwner is the name of the error
-error fundMe_notOwner();
+error fundMe__notOwner();
 
 contract FundMe {
     uint256 funderIndex;
@@ -23,7 +25,7 @@ contract FundMe {
     //Revert: If the condition is true (the sender is not the owner), the transaction is reverted using the revert keyword, and the notOwner() error is triggered.
     modifier CheckIfItsOwner() {
         if (msg.sender != i_owner) {
-            revert fundMe_notOwner();
+            revert fundMe__notOwner();
         }
         // require(msg.sender == i_owner, "The address of msg.sender must be qual to the owner");
         _; //Continues to function execution if the require passes
@@ -31,12 +33,12 @@ contract FundMe {
 
     constructor(address priceFeed) {
         i_owner = msg.sender;
-        s_priceFeed = aggregatorV3Interface(priceFeed);
+        s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     function getFunds() public payable {
         require(
-            msg.value.getConversionRate() >= MINIMUM_VALUE_USD,
+            msg.value.getConversionRate(s_priceFeed) >= MINIMUM_VALUE_USD,
             "If the value is less than required then pop this message"
         );
         listOfAddressSentMoney.push(msg.sender);
