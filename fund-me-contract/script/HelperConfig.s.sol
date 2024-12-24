@@ -5,32 +5,62 @@
 pragma solidity 0.8.19;
 
 import {Script} from "forge-std/Script.sol";
+import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
 
-contract HelperConfig {
-    // If we are on a local Anvil, we deploy the mocks // Else, grab the existing address from the live network
+// This contract is designed to help configure the price feed for different blockchain networks.
+// If we are on a local Anvil, we deploy the mocks // Else, grab the existing address from the live network
+
+contract HelperConfig is Script {
+    // the main variable to store the active configuration for the current network
     NetworkConfig public activeNetworkConfig;
+    uint8 constant DECIMALS = 8;
+    int256 constant INITIAL_PRICE = 200e8;
 
+    //struct is for defining multiple data types into one unit
+    //can think as a way to group related variables together under a single name making code easier to manage.
     struct NetworkConfig {
-        address priceFeed; //ETH/USD price feed address
+        address priceFeed; //The address of the price feed ETH/USD for the network
     }
 
+    //constructor is executed when contract is deployed, it will initiate the 'activeNetworkConfig' based on the blockchain's chain ID.
     constructor() {
+        // Check if the blockchain's chain ID is 11155111, which corresponds to the Sepolia testnet. each blockcain has its own chainID
         if (block.chainid == 11155111) {
+            // If the chain ID is Sepolia, call the `getSepoliaEthConfig` function to get Sepolia's configuration.
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
-            activeNetworkConfig = GetAnvilEthConfig();
+            // If it's not Sepolia, assume we are running on a local Anvil network.
+            activeNetworkConfig = GetOrCreateAnvilEthConfig();
         }
     }
 
+    // Function to return the configuration specific to the Sepolia testnet.
+    // It's declared `pure` because it doesn't modify the state or read state variables.
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
-        //price feed adddress
+        //NetworkConfig memory sepoliaConfig declares a new variable, the type is the struct
+        //NetworkConfig({...}) is creating a new NetworkConfig struct with specific values for its fields.
         NetworkConfig memory sepoliaConfig = NetworkConfig({
+            // The Sepolia testnet's ETH/USD price feed address (this is hardcoded here).
             priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306
         });
+        //then returning a fully formed NetworkConfig struct instance.
         return sepoliaConfig;
     }
 
-    function GetAnvilEthConfig() public pure returns (NetworkConfig memory) {
-        //price feed adddress
+    function GetOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        if (activeNetworkConfig.priceFeed != address(0)) {
+            return activeNetworkConfig;
+        }
+        vm.startBroadcast();
+        MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
+            DECIMALS,
+            INITIAL_PRICE
+        );
+        vm.stopBroadcast();
+
+        NetworkConfig memory anvilConfig = NetworkConfig({
+            priceFeed: address(mockPriceFeed)
+        });
+        return anvilConfig;
     }
 }
