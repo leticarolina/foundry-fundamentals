@@ -2,7 +2,7 @@
 //1.deploy mocks when we are on a local anvil chain
 //2.keep track of contract address accross different chains
 
-pragma solidity 0.8.19;
+pragma solidity ^0.8.18;
 
 import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
@@ -48,19 +48,28 @@ contract HelperConfig is Script {
     }
 
     function GetOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        // Check for Existing Configuration: if a configuration already exists (priceFeed is not the zero address)
         if (activeNetworkConfig.priceFeed != address(0)) {
+            // If address not 0 means activeNetworkConfig already has a priceFeed, return it (no need to create a new one)
             return activeNetworkConfig;
         }
+
         vm.startBroadcast();
+        // Deploy a new MockV3Aggregator contract (a fake price feed for testing purposes)
+        // DECIMALS: Number of decimals the mock price feed supports
+        // INITIAL_PRICE: The initial price value for the mock price feed
         MockV3Aggregator mockPriceFeed = new MockV3Aggregator(
             DECIMALS,
             INITIAL_PRICE
         );
         vm.stopBroadcast();
 
+        // Create a new NetworkConfig struct for the Anvil network
+
         NetworkConfig memory anvilConfig = NetworkConfig({
             priceFeed: address(mockPriceFeed)
         });
+        // Return the newly created Anvil network configuration
         return anvilConfig;
     }
 }

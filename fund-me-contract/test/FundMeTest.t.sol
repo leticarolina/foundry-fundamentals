@@ -27,6 +27,8 @@ contract FundMeTest is Test {
         console.log(msg.sender); //the actualm owner address
         assertEq(fundMe.i_owner(), msg.sender);
     }
+
+    function testFundFailWithoutEnoughEth() {}
 }
 
 //forge test = to run the test file
