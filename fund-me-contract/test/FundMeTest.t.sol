@@ -54,6 +54,56 @@ contract FundMeTest is Test {
         //Using Foundry’s assertEq function to verify that the amountFunded matches 1e18 (1 ETH).
         assertEq(amountFunded, ONE_ETH);
     }
+
+    function testAddsFunderToArrayOfFunders() public {
+        vm.prank(USER);
+        fundMe.getFunds{value: ONE_ETH}();
+
+        address funder = fundMe.getAddressOfFunder(0);
+        assertEq(funder, USER);
+    }
+
+    modifier funded() {
+        //so we dont have to repeat this prank user all the time
+        vm.prank(USER);
+        fundMe.fund{value: ONE_ETH}();
+        _;
+    }
+
+    function testOnlyOwnerCanWithdraw() funded {
+        //this should revert bcs the user funding is not expected to revert only the owner
+        vm.prank(USER);
+        vm.expectRevert();
+
+        fundMe.withdraw();
+    }
+
+    function testWithdrawWithSingleFunder() public funder {
+        //arrange
+        uint256 startingOwnerBalance = fundMe.getOwner().balance; //getting owners balance
+        uint256 startingFundMeBalance = address(fundMe).balance;
+        //act
+        vm.prank(fundMe.getOwner());
+        fundMe.withdraw();
+        //assert
+        uint256 endingOwnerBalance = fundMe.getOwner().balance;
+        uint256 endingFundMeBalance = address(fundMe).balance;
+        assertEq(endingFundMeBalance, 0);
+        assertEq(
+            startingFundMeBalance + startingFundMeBalance,
+            endingOwnerBalance
+        );
+    }
+
+    function testWithdrawFromMultipleFunders() public funded {
+        uint256 numberOfFunders = 10;
+        uint256 startingFunderIndex = 2;
+        for (uint256 i = startingFunderIndex, i<numberOfFunders, i++ ){
+            vm.prank();
+            vm.deal();
+            
+        }
+    }
 }
 
 //forge test = to run the test file

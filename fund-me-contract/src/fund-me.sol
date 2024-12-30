@@ -19,7 +19,7 @@ contract FundMe {
     //Mappings Are Like Hash Tables key to value
     mapping(address addressOfSender => uint256 amountSent)
         private s_addressToAmountSent; //This line means that for each address key, there’s an associated uint256 value.
-    address public immutable i_owner; //Variables declared as immutable are set once, but only at deployment time, and cannot be changed afterward.
+    address private immutable i_owner; //Variables declared as immutable are set once, but only at deployment time, and cannot be changed afterward.
     AggregatorV3Interface private s_priceFeed;
 
     //Revert: If the condition is true (the sender is not the owner), the transaction is reverted using the revert keyword, and the notOwner() error is triggered.
@@ -86,14 +86,17 @@ contract FundMe {
     ) external view returns (uint256) {
         //This is where the function goes into the private mapping (s_addressToAmountSent), finds the value stored for the fundingAddress, and gives it back.
         return s_addressToAmountSent[fundingAddress];
-        //example to call this function: uint256 amount = myContract.getAddressToAmountSent(0xDE...456);
+        //example to call this function: uint256 amount = fundMe.getAddressToAmountSent(0xDE...456);
     }
 
     //taking an index and returning an address
     // This function lets external users or contracts retrieve the address of a funder by specifying their position (index) in the array.
-    //example using address funder = myContract.getAddressOfFunder(1);
-
+    //example using address funder = fundMe.getAddressOfFunder(1);
     function getAddressOfFunder(uint256 index) external view returns (address) {
         return s_listOfAddressSentMoney[index];
+    }
+
+    function getOwner() external view returns (address) {
+        return i_owner;
     }
 }
