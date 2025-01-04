@@ -29,9 +29,9 @@ contract FundMeTest is Test {
     //checking if the sender of the contract will be set to the owner
     function testIsTheContractOwner() public view {
         // forge test -vv  the number of console.log we want to return
-        console.log(fundMe.i_owner()); //address that was test deployed
+        console.log(fundMe.getOwner()); //address that was test deployed
         console.log(msg.sender); //the actualm owner address
-        assertEq(fundMe.i_owner(), msg.sender);
+        assertEq(fundMe.getOwner(), msg.sender);
     }
 
     function testFail_WithoutEnoughEth() public {
@@ -66,11 +66,11 @@ contract FundMeTest is Test {
     modifier funded() {
         //so we dont have to repeat this prank user all the time
         vm.prank(USER);
-        fundMe.fund{value: ONE_ETH}();
+        fundMe.getFunds{value: ONE_ETH}();
         _;
     }
 
-    function testOnlyOwnerCanWithdraw() funded {
+    function testOnlyOwnerCanWithdraw() public funded {
         //this should revert bcs the user funding is not expected to revert only the owner
         vm.prank(USER);
         vm.expectRevert();
@@ -78,7 +78,7 @@ contract FundMeTest is Test {
         fundMe.withdraw();
     }
 
-    function testWithdrawWithSingleFunder() public funder {
+    function testWithdrawWithSingleFunder() public funded {
         //arrange
         uint256 startingOwnerBalance = fundMe.getOwner().balance; //getting owners balance
         uint256 startingFundMeBalance = address(fundMe).balance;
@@ -90,19 +90,33 @@ contract FundMeTest is Test {
         uint256 endingFundMeBalance = address(fundMe).balance;
         assertEq(endingFundMeBalance, 0);
         assertEq(
-            startingFundMeBalance + startingFundMeBalance,
+            startingFundMeBalance + startingOwnerBalance,
             endingOwnerBalance
         );
     }
 
     function testWithdrawFromMultipleFunders() public funded {
-        uint256 numberOfFunders = 10;
-        uint256 startingFunderIndex = 2;
-        for (uint256 i = startingFunderIndex, i<numberOfFunders, i++ ){
-            vm.prank();
-            vm.deal();
-            
+        uint160 numberOfFunders = 10;
+        uint160 startingFunderIndex = 1;
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
+            //HOAX is vm.pran() vm.deal() combined
+            hoax(address(i), ONE_ETH);
+            fundMe.getFunds{value: ONE_ETH}();
         }
+
+        uint256 startingOwnerBalance = fundMe.getOwner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+        //act
+        vm.startPrank(fundMe.getOwner());
+        fundMe.withdraw();
+        vm.stopPrank();
+        //assert
+
+        assert(address(fundMe).balance == 0);
+        assert(
+            startingFundMeBalance + startingOwnerBalance ==
+                fundMe.getOwner().balance
+        );
     }
 }
 
