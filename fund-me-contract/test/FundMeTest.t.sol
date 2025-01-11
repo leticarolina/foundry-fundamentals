@@ -118,6 +118,30 @@ contract FundMeTest is Test {
                 fundMe.getOwner().balance
         );
     }
+
+    function testWithdrawFromMultipleFundersCheaper() public funded {
+        uint160 numberOfFunders = 10;
+        uint160 startingFunderIndex = 1;
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
+            //HOAX is vm.pran() vm.deal() combined
+            hoax(address(i), ONE_ETH);
+            fundMe.getFunds{value: ONE_ETH}();
+        }
+
+        uint256 startingOwnerBalance = fundMe.getOwner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+        //act
+        vm.startPrank(fundMe.getOwner());
+        fundMe.withdrawCheaper();
+        vm.stopPrank();
+        //assert
+
+        assert(address(fundMe).balance == 0);
+        assert(
+            startingFundMeBalance + startingOwnerBalance ==
+                fundMe.getOwner().balance
+        );
+    }
 }
 
 //forge test = to run the test file

@@ -65,6 +65,21 @@ contract FundMe {
         require(callSuccess, "Call failed");
     }
 
+    function withdrawCheaper() public CheckIfItsOwner {
+        uint256 fundersLength = s_listOfAddressSentMoney.length;
+        for (funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
+            address funder = s_listOfAddressSentMoney[funderIndex];
+            s_addressToAmountSent[funder] = 0; //This sets the amount sent by each address to 0, "withdrawing" their funds.
+        }
+
+        s_listOfAddressSentMoney = new address[](0);
+
+        (bool callSuccess, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(callSuccess, "Call failed");
+    }
+
     //This function is designed to handle plain Ether transfers (without any data) to the contract.
     //Visibility: external means that it can only be called from outside the contract, which is standard for receive().
     receive() external payable {
