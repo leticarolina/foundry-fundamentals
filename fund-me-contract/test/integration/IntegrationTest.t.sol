@@ -16,21 +16,20 @@ contract IntegrationTest is Test {
 
     address USER = makeAddr("user"); //makeAddr() is a Foundry utility function that generate a unique Ethereum address.
 
+    //The setUp() function initializes the test environment:
     function setUp() external {
         deployFundMe = new FundMeScript();
         fundMe = deployFundMe.run();
         vm.deal(USER, USER_INITIAL_BALANCE); //vm.deal Foundry cheatcode that allows you to directly set the balance of any address for testing purposes.
     }
 
+    //This test function simulates a user interacting with the FundMe contract
     function testUserCanFundInteractions() public {
-        uint256 preUserBalance = address(USER).balance;
-        uint256 preOwnerBalance = address(fundMe.getOwner()).balance;
+        uint256 preUserBalance = address(USER).balance; //The balance of the user before sending funds.
+        uint256 preOwnerBalance = address(fundMe.getOwner()).balance; //The balance of the contract owner before the transaction.
 
         vm.prank(USER);
         fundMe.getFunds{value: ONE_ETH}();
-
-        // GetFundsFundMe getFundsFundMe = new GetFundsFundMe();
-        // getFundsFundMe.getFundsFundMe(address(fundMe));
 
         WithdrawFundMe withdrawFundMe = new WithdrawFundMe();
         withdrawFundMe.withdrawFundMe(address(fundMe));

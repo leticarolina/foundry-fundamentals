@@ -15,7 +15,6 @@ contract GetFundsFundMe is Script {
         vm.startBroadcast();
         FundMe(payable(mostRecentDeploy)).getFunds{value: ONE_ETH}();
         vm.stopBroadcast();
-        vm.startBroadcast();
     }
 
     function run() external {
