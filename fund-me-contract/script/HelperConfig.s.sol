@@ -24,14 +24,24 @@ contract HelperConfig is Script {
 
     //constructor is executed when contract is deployed, it will initiate the 'activeNetworkConfig' based on the blockchain's chain ID.
     constructor() {
+        if (block.chainid == 1) {
+            activeNetworkConfig = getMainnetEthConfig();
+        }
         // Check if the blockchain's chain ID is 11155111, which corresponds to the Sepolia testnet. each blockcain has its own chainID
-        if (block.chainid == 11155111) {
+        else if (block.chainid == 11155111) {
             // If the chain ID is Sepolia, call the `getSepoliaEthConfig` function to get Sepolia's configuration.
             activeNetworkConfig = getSepoliaEthConfig();
         } else {
             // If it's not Sepolia, assume we are running on a local Anvil network.
             activeNetworkConfig = GetOrCreateAnvilEthConfig();
         }
+    }
+
+    function getMainnetEthConfig() public pure returns (NetworkConfig memory) {
+        NetworkConfig memory mainnetConfig = NetworkConfig({
+            priceFeed: 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+        });
+        return mainnetConfig;
     }
 
     // Function to return the configuration specific to the Sepolia testnet.

@@ -56,6 +56,8 @@ cast wallet import myAnvilWallet --interactive
 Enter private key:
 Enter password: `myAnvilWallet` keystore was saved successfully. Address: 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 
+//cast wallet list = gets wallets 
+
 //--------------------------example deploying with private key or .env (without broadcast keyword it wont send it will simulate)
 //forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --private-key xxxx --broadcast
 //if it return "ONCHAIN EXECUTION COMPLETE AND SUCESSFUL"

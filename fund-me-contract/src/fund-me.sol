@@ -47,25 +47,25 @@ contract FundMe {
             msg.value;
     }
 
+    // function withdraw() public CheckIfItsOwner {
+    //     for (
+    //         funderIndex = 0;
+    //         funderIndex < s_listOfAddressSentMoney.length;
+    //         funderIndex++
+    //     ) {
+    //         address funder = s_listOfAddressSentMoney[funderIndex];
+    //         s_addressToAmountSent[funder] = 0; //This sets the amount sent by each address to 0, "withdrawing" their funds.
+    //     }
+
+    //     s_listOfAddressSentMoney = new address[](0);
+
+    //     (bool callSuccess, ) = payable(msg.sender).call{
+    //         value: address(this).balance
+    //     }("");
+    //     require(callSuccess, "Call failed");
+    // }
+
     function withdraw() public CheckIfItsOwner {
-        for (
-            funderIndex = 0;
-            funderIndex < s_listOfAddressSentMoney.length;
-            funderIndex++
-        ) {
-            address funder = s_listOfAddressSentMoney[funderIndex];
-            s_addressToAmountSent[funder] = 0; //This sets the amount sent by each address to 0, "withdrawing" their funds.
-        }
-
-        s_listOfAddressSentMoney = new address[](0);
-
-        (bool callSuccess, ) = payable(msg.sender).call{
-            value: address(this).balance
-        }("");
-        require(callSuccess, "Call failed");
-    }
-
-    function withdrawCheaper() public CheckIfItsOwner {
         uint256 fundersLength = s_listOfAddressSentMoney.length;
         for (funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
             address funder = s_listOfAddressSentMoney[funderIndex];
