@@ -4,7 +4,7 @@
 // In the terminal "X" will hide terminal and the trash icon will delete the terminal flow.
 //command + W = remove most recent block of code written in the terminak
 //command + U = Delete entire line of code 
-//command + backticks or J =  toogle terminal
+//command + J = toogle terminal
 // code . = open up a new vscode blank window inside the folder
 //touch FileName = create a file
 //creating a new folder = mkdir FolderName
@@ -13,3 +13,4 @@
 // keyword up = paste last terminal command , keep pressing and it keeps bringing last commands *up and down to navigate
 //history -c = clean the previous commands ran on the terminal 
 //source .env = save the enviromantal variables from .env file 
+//mkdir = new folder

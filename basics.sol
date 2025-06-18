@@ -16,7 +16,7 @@
 //DEPLYING A SMART CONTRACT FROM THE TERMINAL
 //forge create - Deploy a smart contract.
 //Example full deploy of 'Simple storage
-forge create <path>:<contractname> --rpc-url 127.0.0.1:8545 --interactive
+// forge create <path>:<contractname> --rpc-url 127.0.0.1:8545 --interactive
 //then it will prompt to insert private key
 //my first deplyment details on anvil
 Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
@@ -131,3 +131,5 @@ followed this tutorial but...= https://updraft.cyfrin.io/courses/foundry/foundry
 Contract Address: 0x2db40c20f8e1FD4F76fE180B84387FF7727cfAD8
 Block: 7219577
 Paid: 0.000002299497376581 ETH (390987 gas * 0.005881263 gwei)
+
+

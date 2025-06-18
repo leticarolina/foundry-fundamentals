@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 contract SimpleStorage {
+    //my own variable type with uint256 and string
     struct Person {
         uint256 favoriteNumber;
         string name;
