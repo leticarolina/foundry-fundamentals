@@ -12,5 +12,8 @@
 //cd .. = move up to parent directory/folder
 // keyword up = paste last terminal command , keep pressing and it keeps bringing last commands *up and down to navigate
 //history -c = clean the previous commands ran on the terminal 
+//rm .bash_history = is used to delete the .bash_history file, which contains a log of the commands you’ve executed
 //source .env = save the enviromantal variables from .env file 
+//echo $VARIABLE - shows value of .env variable 
 //mkdir = new folder
+//

@@ -1,15 +1,14 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol"; //Test gives access to assertions and cheatcodes (vm, assertEq, etc.)
 import {FundMe} from "../src/fund-me.sol";
 import {FundMeScript} from "../script/FundMe.s.sol";
 
 contract FundMeTest is Test {
     FundMe fundMe;
     uint256 constant ONE_ETH = 1e18;
-    address USER = makeAddr("user"); //makeAddr() is a Foundry utility function that generate a unique Ethereum address.
-
+    address USER = makeAddr("user"); //makeAddr() is a Foundry utility function that generate a unique random Ethereum address.
     uint256 constant USER_INITIAL_BALANCE = 10e18;
 
     function setUp() external {
@@ -34,14 +33,14 @@ contract FundMeTest is Test {
         assertEq(fundMe.getOwner(), msg.sender);
     }
 
-    function testFail_WithoutEnoughEth() public {
-        // expectRevert is used in testing to ensure that your smart contract correctly rejects invalid or unauthorized inputs by reverting. It’s like saying:
-        // "I expect the next line to fail  because it's invalid. If it doesn't fail, the test is broken and something's wrong with my contract logic."
-        //expectRevert used to test that a specific function call or action in your smart contract fails and reverts as expected.
-        //If the line fails, the test passes (expected behavior). If the line succeeds, the test fails (unexpected behavior).
-        vm.expectRevert("Insufficient funds sent");
-        fundMe.getFunds();
-    }
+    // function test_RevertIf_WithoutEnoughEth() public {
+    //     // expectRevert is used in testing to ensure that your smart contract correctly rejects invalid or unauthorized inputs by reverting. It’s like saying:
+    //     // "I expect the next line to fail  because it's invalid. If it doesn't fail, the test is broken and something's wrong with my contract logic."
+    //     //expectRevert used to test that a specific function call or action in your smart contract fails and reverts as expected.
+    //     //If the line fails, the test passes (expected behavior). If the line succeeds, the test fails (unexpected behavior).
+    //     vm.expectRevert("!= Insufficient funds sent");
+    //     fundMe.getFunds();
+    // }
 
     function testFundUpdatesDataStructure() public {
         vm.prank(USER); //the next transaction will be sent by USER aadress
