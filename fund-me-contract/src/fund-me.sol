@@ -46,7 +46,7 @@ contract FundMe {
             s_addressToAmountSent[msg.sender] +
             msg.value;
     }
-
+    //reading loop from storage, more expensive than reading from memory
     // function withdraw() public CheckIfItsOwner {
     //     for (
     //         funderIndex = 0;
