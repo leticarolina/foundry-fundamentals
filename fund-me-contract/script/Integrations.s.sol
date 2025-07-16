@@ -5,9 +5,10 @@
 pragma solidity ^0.8.18;
 //Scripts are used to deploy contracts, call contract functions, or perform on-chain actions through Foundry's forge script command.
 import {Script, console} from "forge-std/Script.sol";
-import {DevOpsTools} from "foundry-devops/src/DevOpsTools.sol";
+import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 import {FundMe} from "../src/fund-me.sol";
 
+//contract for funding the FundMe contract
 contract GetFundsFundMe is Script {
     uint256 constant ONE_ETH = 0.1 ether;
 
@@ -26,7 +27,7 @@ contract GetFundsFundMe is Script {
         getFundsFundMe(mostRecentDeploy);
     }
 }
-
+//contract for withdrawing funds from the FundMe contract
 contract WithdrawFundMe is Script {
     function withdrawFundMe(address mostRecentDeploy) public {
         vm.startBroadcast();

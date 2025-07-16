@@ -11,7 +11,7 @@ using Converter for uint256;
 //error is the keyword used to define a custom error.
 //notOwner is the name of the error
 error fundMe__notOwner();
-
+//0xA0C579D3B828271f5255464083BaE3e004a64828 deployed and verified on Sepolia
 contract FundMe {
     uint256 funderIndex;
     uint256 public constant MINIMUM_VALUE_USD = 5e18; //Variables declared as constant are set at the time of compilation and cannot be changed afterward.

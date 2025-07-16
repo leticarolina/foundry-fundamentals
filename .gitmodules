@@ -16,3 +16,6 @@
 [submodule "raffle-contract/lib/chainlink-brownie-contracts"]
 	path = raffle-contract/lib/chainlink-brownie-contracts
 	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+[submodule "raffle-contract/lib/chainlink"]
+	path = raffle-contract/lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink

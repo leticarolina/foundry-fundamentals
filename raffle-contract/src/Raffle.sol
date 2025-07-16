@@ -7,10 +7,12 @@ pragma solidity ^0.8.19;
  * @notice This contract is for creating a sample raffle
  * @dev Implements Chainlink VRFv2.5
  */
-import {VRFCoordinatorV2Interface} from "@chainlink/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
-import {VRFConsumerBaseV2} from "@chainlink/src/v0.8/vrf/VRFConsumerBaseV2.sol";
+// import {VRFCoordinatorV2Interface} from "@chainlink/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
 
-contract Raffle is VRFConsumerBaseV2 {
+contract Raffle is VRFConsumerBaseV2Plus {
     // Custom Errors
     error Raffle__NotEnoughEthSent();
 
@@ -18,7 +20,15 @@ contract Raffle is VRFConsumerBaseV2 {
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
     uint256 private s_lastTimeStamp;
-    // address vrfCoordinator;
+    // VRFCoordinatorV2Interface vrfCoordinator;
+
+    // Chainlink VRF related variables
+    IVRFCoordinatorV2Plus private immutable i_vrfCoordinator;
+    bytes32 private immutable i_keyHash; // gas lane
+    uint64 private immutable i_subscriptionId;
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint32 private immutable i_callbackGasLimit;
+    uint32 private constant NUM_WORDS = 1;
 
     //events
     event RaffleEntered(address indexed player, uint256 amount);
@@ -26,12 +36,20 @@ contract Raffle is VRFConsumerBaseV2 {
     constructor(
         uint256 entranceFee,
         uint256 interval,
-        address vrfCoordinator
-    ) VRFConsumerBaseV2(vrfCoordinator) {
+        address _vrfCoordinator,
+        bytes32 keyHash,
+        uint64 subscriptionId,
+        uint32 callbackGasLimit
+    ) VRFConsumerBaseV2Plus(_vrfCoordinator) {
         i_entranceFee = entranceFee;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
-        // vrfCoordinator = vrfCoordinator;
+        // _vrfCoordinator = i_vrfCoordinator;
+
+        i_vrfCoordinator = IVRFCoordinatorV2Plus(_vrfCoordinator);
+        i_keyHash = keyHash;
+        i_subscriptionId = subscriptionId;
+        i_callbackGasLimit = callbackGasLimit;
     }
 
     function enterRaffle() public payable {
@@ -43,16 +61,37 @@ contract Raffle is VRFConsumerBaseV2 {
         emit RaffleEntered(msg.sender, msg.value);
     }
 
-    function pickWinner() public view {
+    function pickWinner() public {
         // check to see if enough time has passed
         if (block.timestamp - s_lastTimeStamp < i_interval) {
             //revert here ;
         }
+        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
+            .RandomWordsRequest({
+                keyHash: i_keyHash,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: i_callbackGasLimit,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
+                )
+            });
+
+        // uint256 request = i_vrfCoordinator.requestRandomWords(
+        //     i_keyHash,
+        //     i_subscriptionId,
+        //     REQUEST_CONFIRMATIONS,
+        //     i_callbackGasLimit,
+        //     NUM_WORDS
+        // );
+
+        uint256 requestId = i_vrfCoordinator.requestRandomWords(request);
     }
 
     function fulfillRandomWords(
         uint256 requestId,
-        uint256[] memory randomWords
+        uint256[] calldata randomWords
     ) internal override {}
     // This function is called by the VRF Coordinator when it has a random number for us
     // requestId is the ID of the request, and randomWords is an array of random numbers
