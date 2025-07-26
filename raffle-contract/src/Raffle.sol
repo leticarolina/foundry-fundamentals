@@ -8,13 +8,25 @@ pragma solidity ^0.8.19;
  * @dev Implements Chainlink VRFv2.5
  */
 // import {VRFCoordinatorV2Interface} from "@chainlink/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
-import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol"; //Base contract that gives your contract access to the fulfillRandomWords() callback
+import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol"; // Library that provides helper functions for VRF requests, that builds the request in memory (RandomWordsRequest struct + encoding extraArgs)
+import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol"; // Interface to talk to the actual Chainlink Coordinator contract deployed on-chain. which allows us to request random words.
 
 contract Raffle is VRFConsumerBaseV2Plus {
     // Custom Errors
     error Raffle__NotEnoughEthSent();
+    error Raffle__transferFailed();
+    error Raffle__CalculatingRaffle();
+    error Raffle__UpkeepNotNeeded(
+        uint256 currentBalance,
+        uint256 numPlayers,
+        uint256 raffleState
+    );
+
+    enum RaffleState {
+        OPEN,
+        CALCULATING
+    }
 
     uint256 leticia;
     uint256 private immutable i_entranceFee;
@@ -29,9 +41,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private immutable i_callbackGasLimit;
     uint32 private constant NUM_WORDS = 1;
+    address payable[] private s_players; // Array to store players' addresses
+    address payable private s_recentWinner;
+    RaffleState private s_raffleState;
 
     //events
     event RaffleEntered(address indexed player, uint256 amount);
+    event WinnerPicked(address indexed winner);
 
     constructor(
         uint256 entranceFee,
@@ -44,6 +60,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_entranceFee = entranceFee;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
+        s_raffleState = RaffleState.OPEN;
         // _vrfCoordinator = i_vrfCoordinator;
 
         i_vrfCoordinator = IVRFCoordinatorV2Plus(_vrfCoordinator);
@@ -53,6 +70,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     function enterRaffle() public payable {
+        if (s_raffleState != RaffleState.OPEN) {
+            revert Raffle__CalculatingRaffle();
+        }
         //require(msg.value >= i_entranceFee, "Not enough ETH sent");
         // require(msg.value >= i_entranceFee, Raffle__NotEnoughEthSent());
         if (msg.value < i_entranceFee) {
@@ -61,11 +81,31 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit RaffleEntered(msg.sender, msg.value);
     }
 
-    function pickWinner() public {
-        // check to see if enough time has passed
-        if (block.timestamp - s_lastTimeStamp < i_interval) {
-            //revert here ;
+    function checkUpkeep(
+        bytes memory /* checkData */
+    ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
+        bool isOpen = RaffleState.OPEN == s_raffleState;
+        bool timePassed = ((block.timestamp - s_lastTimeStamp) >= i_interval); //check if enough time has passed since the last raffle
+        bool hasPlayers = s_players.length > 0; //check if there are players in the raffle
+        bool hasBalance = address(this).balance > 0; //check if the contract has a balance to pay the winner
+        upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers);
+        return (upkeepNeeded, "0x0");
+    }
+    // This function is called by the Chainlink Keeper to check if upkeep is needed
+    //former pickWinner function
+    function performUpkeep(bytes calldata /* performData */) external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        // require(upkeepNeeded, "Upkeep not needed");
+        if (!upkeepNeeded) {
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
+
+        s_raffleState = RaffleState.CALCULATING;
+
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({
                 keyHash: i_keyHash,
@@ -89,13 +129,32 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 requestId = i_vrfCoordinator.requestRandomWords(request);
     }
 
+    //cei rule: check-effects-interactions
+    //checks are the conditions that must be met before executing the function
+    //effects are the internal changes made to the contract state
+    //interactions are the external calls made to other contracts or addresses
     function fulfillRandomWords(
         uint256 requestId,
         uint256[] calldata randomWords
-    ) internal override {}
+    ) internal override {
+        uint256 indexOfWinner = randomWords[0] % s_players.length;
+        address payable winner = s_players[indexOfWinner];
+        s_recentWinner = winner;
+
+        delete s_players; // Reset the players array, sets the length of the array to 0. cheaper gas
+        s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
+        s_lastTimeStamp = block.timestamp; // Update the last time stamp
+        emit WinnerPicked(winner);
+
+        // Transfer the prize to the winner
+        (bool success, ) = winner.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+
+        s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
+    }
     // This function is called by the VRF Coordinator when it has a random number for us
     // requestId is the ID of the request, and randomWords is an array of random numbers
-    // We can use these random numbers to pick a winner or perform other acti
+    // We can use these random numbers to pick a winner or perform other action
 
     // Getter Functions
     function getEntranceFee() external view returns (uint256) {
