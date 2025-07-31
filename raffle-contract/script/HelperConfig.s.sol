@@ -16,6 +16,7 @@ abstract contract CodeConstants {
 
 contract HelperConfig is CodeConstants, Script {
     error HelperConfig__InvalidChainId();
+
     struct NetworkConfig {
         uint256 entranceFee;
         uint256 interval;
@@ -73,28 +74,32 @@ contract HelperConfig is CodeConstants, Script {
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+        // If the local chain ID is already configured, return it.
         if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator == address(0)) {
             networkConfigs[LOCAL_CHAIN_ID] = getLocalConfig();
+
+            return networkConfigs[LOCAL_CHAIN_ID];
         }
-        return networkConfigs[LOCAL_CHAIN_ID];
 
+        // If not, create a new mock VRFCoordinator and return the config.
         vm.startBroadcast();
-
         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
             MOCK_BASE_FEE,
             MOCK_GAS_PRICE,
             MOCK_WEI_PER_UNIT_LINK
         );
         vm.stopBroadcast();
-        return
-            NetworkConfig({
-                entranceFee: 0.01 ether,
-                interval: 30, // 30 seconds
-                vrfCoordinator: address(vrfCoordinatorMock),
-                // gasLane value doesn't matter.
-                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                subscriptionId: 0,
-                callbackGasLimit: 500_000
-            });
+
+        // Now build the config with that mock and store it
+
+        NetworkConfig({
+            entranceFee: 0.01 ether,
+            interval: 30, // 30 seconds
+            vrfCoordinator: address(vrfCoordinatorMock),
+            // gasLane value doesn't matter.
+            keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+            subscriptionId: 0,
+            callbackGasLimit: 500_000
+        });
     }
 }
