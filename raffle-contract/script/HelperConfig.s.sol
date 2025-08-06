@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 import {Script} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {LinkToken} from "../test/mocks/TokenToFundVRF.sol";
 
 abstract contract CodeConstants {
     // VRF Mock values
@@ -24,6 +25,7 @@ contract HelperConfig is CodeConstants, Script {
         bytes32 keyHash;
         uint64 subscriptionId;
         uint32 callbackGasLimit;
+        address token; // Optional, can be used for native token payments
     }
 
     NetworkConfig public activeNetworkConfig;
@@ -57,11 +59,14 @@ contract HelperConfig is CodeConstants, Script {
                 vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
                 callbackGasLimit: 500000, // 500,000 gas
-                subscriptionId: 0
+                subscriptionId: 0,
+                token: 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Sepolia ETH token address
             });
     }
 
-    function getLocalConfig() public pure returns (NetworkConfig memory) {
+    function getLocalConfig(
+        address linkToken
+    ) public pure returns (NetworkConfig memory) {
         return
             NetworkConfig({
                 entranceFee: 0.01 ether,
@@ -69,7 +74,8 @@ contract HelperConfig is CodeConstants, Script {
                 vrfCoordinator: address(0),
                 keyHash: "",
                 callbackGasLimit: 500000,
-                subscriptionId: 0
+                subscriptionId: 0,
+                token: linkToken
             });
     }
 
@@ -78,15 +84,22 @@ contract HelperConfig is CodeConstants, Script {
         if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator == address(0)) {
             // networkConfigs[LOCAL_CHAIN_ID] = getLocalConfig();
             // 1. Create the base config with default values
-            NetworkConfig memory localConfig = getLocalConfig();
+            // NetworkConfig memory localConfig = getLocalConfig(address(linkToken));
+
+            // 2. Deploy a mock VRFCoordinator if it doesn't exist
+            // This is only done if the vrfCoordinator address is not set.
             vm.startBroadcast();
             VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
                     MOCK_BASE_FEE,
                     MOCK_GAS_PRICE,
                     MOCK_WEI_PER_UNIT_LINK
                 );
+            LinkToken linkToken = new LinkToken();
             vm.stopBroadcast();
 
+            NetworkConfig memory localConfig = getLocalConfig(
+                address(linkToken)
+            );
             // 3. Update the localConfig with the mock address
             localConfig.vrfCoordinator = address(vrfCoordinatorMock);
 

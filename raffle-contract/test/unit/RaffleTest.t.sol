@@ -21,6 +21,7 @@ contract RaffleTest is Test {
     bytes32 keyHash;
     uint64 subscriptionId;
     uint32 callbackGasLimit;
+    address linkToken;
 
     //events must be declared in the test file to use them with vm.expectEmit
     event RaffleEntered(address indexed player, uint256 amount);
@@ -36,6 +37,7 @@ contract RaffleTest is Test {
         keyHash = config.keyHash;
         callbackGasLimit = config.callbackGasLimit;
         subscriptionId = config.subscriptionId;
+        linkToken = config.token;
 
         vm.deal(PLAYER, STARTING_BALANCE); // 💰 give ETH to player
     }
@@ -58,7 +60,9 @@ contract RaffleTest is Test {
 
         // STEP 2: Fast-forward time and block number
         vm.warp(block.timestamp + interval + 1); // moves time forward so upkeep is valid, (need this so checkUpkeep() returns true)
+        //skip(31); //also moves the block.timestamp 31 seconds forward
         vm.roll(block.number + 1); // advances block height
+        //Together, they "fool" the contract into thinking time has passed naturally, so it can perform upkeep.
 
         // STEP 3: Trigger the state change
         raffle.performUpkeep(""); // this should flip state to CALCULATING

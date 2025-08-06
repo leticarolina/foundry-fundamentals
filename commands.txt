@@ -17,3 +17,7 @@
 //echo $VARIABLE - shows value of .env variable 
 //mkdir = new folder
 //forge fmt
+//rm = remove
+//-r = Means recursive — it tells the system to delete the folder and everything inside it (subfolders, files, etc.).
+// -f =  force — it doesn’t ask for confirmation even if files are write-protected.
+//mkdir = make directory, This creates a new folder 

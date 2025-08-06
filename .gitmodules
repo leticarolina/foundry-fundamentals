@@ -19,3 +19,6 @@
 [submodule "raffle-contract/lib/chainlink"]
 	path = raffle-contract/lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "raffle-contract/lib/solmate"]
+	path = raffle-contract/lib/solmate
+	url = https://github.com/transmissions11/solmate
