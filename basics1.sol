@@ -26,6 +26,7 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //forge inspect <contract_name> - Inspect the contract's bytecode, ABI, and other details like storage slots.
 //forge remappings - List the remappings used in the project.
 //forge snapshot - show gas usage and storage changes of a contract.
+//forge test --mt <test_name> - Run a specific test function in a test contract.
 
 //EXAMPLES FULL FORGE DEPLOYMENT OF 'SIMPLE STORAGE'
 

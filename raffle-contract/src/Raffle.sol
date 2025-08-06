@@ -28,11 +28,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         CALCULATING
     }
 
-    uint256 leticia;
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
     uint256 private s_lastTimeStamp;
-    // VRFCoordinatorV2Interface vrfCoordinator;
 
     // Chainlink VRF related variables
     IVRFCoordinatorV2Plus private immutable i_vrfCoordinator;
@@ -43,7 +41,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint32 private constant NUM_WORDS = 1;
     address payable[] private s_players; // Array to store players' addresses
     address payable private s_recentWinner;
-    RaffleState private s_raffleState;
+    RaffleState private s_raffleState; //start with OPEN state
 
     //events
     event RaffleEntered(address indexed player, uint256 amount);
@@ -69,6 +67,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_callbackGasLimit = callbackGasLimit;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           ENTER RAFFLE
+//////////////////////////////////////////////////////////////*/
     function enterRaffle() public payable {
         if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__CalculatingRaffle();
@@ -78,6 +79,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughEthSent();
         }
+
+        s_players.push(payable(msg.sender)); //add the player to the players array
         emit RaffleEntered(msg.sender, msg.value);
     }
 
@@ -159,5 +162,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // Getter Functions
     function getEntranceFee() external view returns (uint256) {
         return i_entranceFee;
+    }
+
+    function getRaffleState() external view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getPlayer(uint256 index) public view returns (address) {
+        return s_players[index];
     }
 }
