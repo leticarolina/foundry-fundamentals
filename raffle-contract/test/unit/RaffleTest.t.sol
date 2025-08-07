@@ -110,4 +110,75 @@ contract RaffleTest is Test {
         emit RaffleEntered(PLAYER, entranceFee);
         raffle.enterRaffle{value: entranceFee}();
     }
+
+    /*//////////////////////////////////////////////////////////////
+                           CHECK UPKEEP
+    //////////////////////////////////////////////////////////////*/
+    function testCheckUpkeepReturnsFalseIfContractHasNoBalance() public {
+        //arrange
+        //assume the time has passed
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        //act
+        // checkUpkeep() is called by the Chainlink Keeper to check if upkeep is needed
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+        //assert
+        // upkeepNeeded should be false because the contract has no balance
+        assert(!upkeepNeeded);
+    }
+    function testCheckUpkeepReturnsFalseIfRaffleNotOpen() public {
+        // // STEP 1: Player enters Raffle
+        // vm.prank(PLAYER);
+        // raffle.enterRaffle{value: entranceFee}();
+
+        // // STEP 2: Fast-forward time and block number
+        // skip(31); // moves time forward so upkeep is valid, (need this so checkUpkeep() returns true)
+        // vm.roll(block.number + 1); // advances block height
+        // //Together, they "fool" the contract into thinking time has passed naturally, so it can perform upkeep.
+
+        // // STEP 3: Trigger the state change
+        // raffle.performUpkeep(""); // this should flip state to CALCULATING
+
+        // //step 1,2,3 are arrange, basically entering the raffle and making it calculating state
+
+        // // STEP 4: Check upkeep. It should return false now since raffle is not open anymore
+        // (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+        // assert(!upkeepNeeded);
+
+        // Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        skip(31);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep(""); // this should flip state to CALCULATING
+        Raffle.RaffleState raffleState = raffle.getRaffleState(); // state should be CALCULATING now
+        // Act
+        (bool upkeepNeeded, ) = raffle.checkUpkeep(""); // checkUpkeep() is called by the Chainlink Keeper to check if upkeep is needed
+
+        // Assert
+        assert(raffleState == Raffle.RaffleState.CALCULATING); // raffle state should be CALCULATING
+        assert(upkeepNeeded == false); // upkeepNeeded should be false because the raffle is not open anymore
+    }
+    function testCheckUpkeepReturnsFalseIfNotEnoughTimeHasPassed() public {
+        //arrange - player enters raffle
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        skip(28);
+
+        //act - check if checkupkeep returns true but not enough time has passed
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+
+        //assert
+        assert(upkeepNeeded == false);
+    }
+    function testCheckUpkeepReturnsTrueWhenParametersAreGood() public {
+        //arrange - player enters raffle and ensure enough time has passed
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 5);
+
+        (bool upkeepNeeded, ) = raffle.checkUpkeep("");
+
+        assertEq(upkeepNeeded, true);
+    }
 }

@@ -34,7 +34,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private s_lastTimeStamp;
 
     // Chainlink VRF related variables
-    IVRFCoordinatorV2Plus private immutable i_vrfCoordinator;
+    IVRFCoordinatorV2Plus private immutable i_vrfCoordinator; // what is that vrf? is the interface to the Chainlink VRF Coordinator contract
     bytes32 private immutable i_keyHash; // gas lane
     uint256 private immutable i_subscriptionId;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
@@ -83,6 +83,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit RaffleEntered(msg.sender, msg.value);
     }
 
+    //function to check if upkeep is needed
+    // This function is called by the Chainlink Keeper to check if upkeep is needed
     function checkUpkeep(
         bytes memory /* checkData */
     ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
@@ -93,8 +95,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers);
         return (upkeepNeeded, "0x0");
     }
-    // This function is called by the Chainlink Keeper to check if upkeep is needed
+
     //former pickWinner function
+    // This function is called by the Chainlink Keeper to check if upkeep is needed
     function performUpkeep(bytes calldata /* performData */) external {
         (bool upkeepNeeded, ) = checkUpkeep("");
         // require(upkeepNeeded, "Upkeep not needed");
