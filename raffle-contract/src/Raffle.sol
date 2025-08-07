@@ -24,8 +24,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
     );
 
     enum RaffleState {
-        OPEN,
-        CALCULATING
+        //enum can also be uint256
+        OPEN, //0
+        CALCULATING //1
     }
 
     uint256 private immutable i_entranceFee;
@@ -35,7 +36,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // Chainlink VRF related variables
     IVRFCoordinatorV2Plus private immutable i_vrfCoordinator;
     bytes32 private immutable i_keyHash; // gas lane
-    uint64 private immutable i_subscriptionId;
+    uint256 private immutable i_subscriptionId;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private immutable i_callbackGasLimit;
     uint32 private constant NUM_WORDS = 1;
@@ -46,13 +47,14 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //events
     event RaffleEntered(address indexed player, uint256 amount);
     event WinnerPicked(address indexed winner);
+    event RequestedRaffleWinner(uint256 indexed requestId);
 
     constructor(
         uint256 entranceFee,
         uint256 interval,
         address _vrfCoordinator,
         bytes32 keyHash,
-        uint64 subscriptionId,
+        uint256 subscriptionId,
         uint32 callbackGasLimit
     ) VRFConsumerBaseV2Plus(_vrfCoordinator) {
         i_entranceFee = entranceFee;
@@ -67,9 +69,6 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_callbackGasLimit = callbackGasLimit;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                           ENTER RAFFLE
-//////////////////////////////////////////////////////////////*/
     function enterRaffle() public payable {
         if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__CalculatingRaffle();
@@ -109,35 +108,44 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
         s_raffleState = RaffleState.CALCULATING;
 
-        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
-            .RandomWordsRequest({
+        // VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
+        //     .RandomWordsRequest({
+        //         keyHash: i_keyHash,
+        //         subId: i_subscriptionId,
+        //         requestConfirmations: REQUEST_CONFIRMATIONS,
+        //         callbackGasLimit: i_callbackGasLimit,
+        //         numWords: NUM_WORDS,
+        //         extraArgs: VRFV2PlusClient._argsToBytes(
+        //             VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
+        //         )
+        //     });
+
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
                 keyHash: i_keyHash,
                 subId: i_subscriptionId,
                 requestConfirmations: REQUEST_CONFIRMATIONS,
                 callbackGasLimit: i_callbackGasLimit,
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
+                    // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
                 )
-            });
-
-        // uint256 request = i_vrfCoordinator.requestRandomWords(
-        //     i_keyHash,
-        //     i_subscriptionId,
-        //     REQUEST_CONFIRMATIONS,
-        //     i_callbackGasLimit,
-        //     NUM_WORDS
-        // );
-
-        uint256 requestId = i_vrfCoordinator.requestRandomWords(request);
+            })
+        );
+        emit RequestedRaffleWinner(requestId);
+        // uint256 requestId = i_vrfCoordinator.requestRandomWords(request);
     }
 
     //cei rule: check-effects-interactions
     //checks are the conditions that must be met before executing the function
     //effects are the internal changes made to the contract state
     //interactions are the external calls made to other contracts or addresses
+    // This function is called by the VRF Coordinator when it has a random number for us
+    // requestId is the ID of the request, and randomWords is an array of random numbers
+    // We can use these random numbers to pick a winner or perform other action
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /*requestId*/,
         uint256[] calldata randomWords
     ) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
@@ -155,9 +163,6 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
         s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
     }
-    // This function is called by the VRF Coordinator when it has a random number for us
-    // requestId is the ID of the request, and randomWords is an array of random numbers
-    // We can use these random numbers to pick a winner or perform other action
 
     // Getter Functions
     function getEntranceFee() external view returns (uint256) {

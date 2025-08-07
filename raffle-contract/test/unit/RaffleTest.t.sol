@@ -19,7 +19,7 @@ contract RaffleTest is Test {
     uint256 interval;
     address vrfCoordinator;
     bytes32 keyHash;
-    uint64 subscriptionId;
+    uint256 subscriptionId;
     uint32 callbackGasLimit;
     address linkToken;
 
@@ -39,7 +39,7 @@ contract RaffleTest is Test {
         subscriptionId = config.subscriptionId;
         linkToken = config.token;
 
-        vm.deal(PLAYER, STARTING_BALANCE); // 💰 give ETH to player
+        vm.deal(PLAYER, STARTING_BALANCE); // give ETH to player
     }
     /*//////////////////////////////////////////////////////////////
                            ENTER RAFFLE

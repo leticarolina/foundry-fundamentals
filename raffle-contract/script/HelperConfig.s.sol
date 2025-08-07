@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-import {Script} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/mocks/TokenToFundVRF.sol";
@@ -23,7 +23,7 @@ contract HelperConfig is CodeConstants, Script {
         uint256 interval;
         address vrfCoordinator;
         bytes32 keyHash;
-        uint64 subscriptionId;
+        uint256 subscriptionId;
         uint32 callbackGasLimit;
         address token; // Optional, can be used for native token payments
     }
@@ -37,6 +37,13 @@ contract HelperConfig is CodeConstants, Script {
 
     function getConfig() public returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
+    }
+
+    function setConfig(
+        uint256 chainId,
+        NetworkConfig memory networkConfig
+    ) public {
+        networkConfigs[chainId] = networkConfig;
     }
 
     function getConfigByChainId(
@@ -57,77 +64,112 @@ contract HelperConfig is CodeConstants, Script {
                 entranceFee: 0.01 ether, // 1e16
                 interval: 30, // 30 seconds
                 vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, //this is the keyhash aka gas lane for Sepolia
                 callbackGasLimit: 500000, // 500,000 gas
                 subscriptionId: 0,
                 token: 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Sepolia ETH token address
             });
     }
 
-    function getLocalConfig(
-        address linkToken
-    ) public pure returns (NetworkConfig memory) {
-        return
-            NetworkConfig({
-                entranceFee: 0.01 ether,
-                interval: 30, // 30 seconds
-                vrfCoordinator: address(0),
-                keyHash: "",
-                callbackGasLimit: 500000,
-                subscriptionId: 0,
-                token: linkToken
-            });
-    }
+    // function getLocalConfig(
+    //     address linkToken
+    // ) public pure returns (NetworkConfig memory) {
+    //     return
+    //         NetworkConfig({
+    //             entranceFee: 0.01 ether,
+    //             interval: 30, // 30 seconds
+    //             vrfCoordinator: address(0),
+    //             keyHash: "",
+    //             callbackGasLimit: 500000,
+    //             subscriptionId: subscriptionId,
+    //             token: linkToken
+    //         });
+    // }
 
+    // function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
+    //     // If the local chain ID is already configured, return it.
+    //     if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator == address(0)) {
+    //         // networkConfigs[LOCAL_CHAIN_ID] = getLocalConfig();
+    //         // 1. Create the base config with default values
+    //         // NetworkConfig memory localConfig = getLocalConfig(address(linkToken));
+
+    //         // 2. Deploy a mock VRFCoordinator if it doesn't exist
+    //         // This is only done if the vrfCoordinator address is not set.
+    //         vm.startBroadcast();
+    //         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+    //                 MOCK_BASE_FEE,
+    //                 MOCK_GAS_PRICE,
+    //                 MOCK_WEI_PER_UNIT_LINK
+    //             );
+    //         LinkToken linkToken = new LinkToken();
+    //         vm.stopBroadcast();
+
+    //         NetworkConfig memory localConfig = getLocalConfig(
+    //             address(linkToken)
+    //         );
+    //         // 3. Update the localConfig with the mock address
+    //         localConfig.vrfCoordinator = address(vrfCoordinatorMock);
+
+    //         // 4. Store it in the mapping
+    //         networkConfigs[LOCAL_CHAIN_ID] = localConfig;
+    //     }
+    //     return networkConfigs[LOCAL_CHAIN_ID];
+
+    //     // If not, create a new mock VRFCoordinator and return the config.
+    //     // vm.startBroadcast();
+    //     // VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+    //     //     MOCK_BASE_FEE,
+    //     //     MOCK_GAS_PRICE,
+    //     //     MOCK_WEI_PER_UNIT_LINK
+    //     // );
+    //     // vm.stopBroadcast();
+    //     // 4. Store it in the mapping
+
+    //     // Now build the config with that mock and store it
+
+    //     // NetworkConfig({
+    //     //     entranceFee: 0.01 ether,
+    //     //     interval: 30, // 30 seconds
+    //     //     vrfCoordinator: address(vrfCoordinatorMock),
+    //     //     // gasLane value doesn't matter.
+    //     //     keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+    //     //     subscriptionId: 0,
+    //     //     callbackGasLimit: 500_000
+    //     // });
+    // }
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
         // If the local chain ID is already configured, return it.
-        if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator == address(0)) {
-            // networkConfigs[LOCAL_CHAIN_ID] = getLocalConfig();
-            // 1. Create the base config with default values
-            // NetworkConfig memory localConfig = getLocalConfig(address(linkToken));
-
-            // 2. Deploy a mock VRFCoordinator if it doesn't exist
-            // This is only done if the vrfCoordinator address is not set.
-            vm.startBroadcast();
-            VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
-                    MOCK_BASE_FEE,
-                    MOCK_GAS_PRICE,
-                    MOCK_WEI_PER_UNIT_LINK
-                );
-            LinkToken linkToken = new LinkToken();
-            vm.stopBroadcast();
-
-            NetworkConfig memory localConfig = getLocalConfig(
-                address(linkToken)
-            );
-            // 3. Update the localConfig with the mock address
-            localConfig.vrfCoordinator = address(vrfCoordinatorMock);
-
-            // 4. Store it in the mapping
-            networkConfigs[LOCAL_CHAIN_ID] = localConfig;
+        //this means if the local chain ID is already set in the mapping, return the existing config.
+        if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator != address(0)) {
+            return networkConfigs[LOCAL_CHAIN_ID];
         }
-        return networkConfigs[LOCAL_CHAIN_ID];
 
+        console.log(unicode" Deploying local mocks...");
         // If not, create a new mock VRFCoordinator and return the config.
-        // vm.startBroadcast();
-        // VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
-        //     MOCK_BASE_FEE,
-        //     MOCK_GAS_PRICE,
-        //     MOCK_WEI_PER_UNIT_LINK
-        // );
-        // vm.stopBroadcast();
-        // 4. Store it in the mapping
+        vm.startBroadcast();
+        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+            MOCK_BASE_FEE,
+            MOCK_GAS_PRICE,
+            MOCK_WEI_PER_UNIT_LINK
+        );
 
-        // Now build the config with that mock and store it
+        LinkToken linkToken = new LinkToken();
+        // uint64 subscriptionId = vrfCoordinatorMock.createSubscription();
+        uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
 
-        // NetworkConfig({
-        //     entranceFee: 0.01 ether,
-        //     interval: 30, // 30 seconds
-        //     vrfCoordinator: address(vrfCoordinatorMock),
-        //     // gasLane value doesn't matter.
-        //     keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-        //     subscriptionId: 0,
-        //     callbackGasLimit: 500_000
-        // });
+        vm.stopBroadcast();
+
+        NetworkConfig memory localConfig = NetworkConfig({
+            entranceFee: 0.01 ether,
+            interval: 30,
+            vrfCoordinator: address(vrfCoordinatorMock),
+            keyHash: 0x0, // gas lane doesn't matter for local tests
+            callbackGasLimit: 500000,
+            subscriptionId: subscriptionId, // use the created subscription ID
+            token: address(linkToken) // Link token address for local tests
+        });
+
+        networkConfigs[LOCAL_CHAIN_ID] = localConfig;
+        return localConfig;
     }
 }

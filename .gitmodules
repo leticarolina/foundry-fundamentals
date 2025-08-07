@@ -22,3 +22,6 @@
 [submodule "raffle-contract/lib/solmate"]
 	path = raffle-contract/lib/solmate
 	url = https://github.com/transmissions11/solmate
+[submodule "raffle-contract/lib/foundry-devops"]
+	path = raffle-contract/lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops
