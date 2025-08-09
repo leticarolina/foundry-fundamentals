@@ -27,6 +27,12 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //forge remappings - List the remappings used in the project.
 //forge snapshot - show gas usage and storage changes of a contract.
 //forge test --mt <test_name> - Run a specific test function in a test contract.
+//forge coverage - Generate a coverage report for the smart contracts in the project.
+//forge coverage --report debug - Generate a detailed coverage report with debug information.
+//forge coverage --report debug > coverage.txt - Save the coverage report to a file named coverage.txt.
+//why debug keyword? It will show the line numbers and source code for each line of the coverage report, making it easier to understand which parts of the code are covered by tests and which are not.
+//cat coverage.txt | grep Raffle.sol -A 30 = read the file coverage.txt and search for the word Raffle.sol and show 30 lines after it
+//cat coverage.txt | grep Raffle.sol -A 40 > raffle_coverage.txt  = '' then save it to a new file called raffle_coverage.txt
 
 //EXAMPLES FULL FORGE DEPLOYMENT OF 'SIMPLE STORAGE'
 
@@ -105,3 +111,39 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //=============== Scripts =====================
 // --verify --etherscan-api-key $(ETHERSCAN_API_KEY) this is used to verify the contract on Etherscan after deployment via command line
 // this is programmatic verification, it will verify the contract on etherscan after deployment automatically and it will use the etherscan api key from the .env file
+
+//----------------- FOUNDRY PATHWAYS AND REMAPPING
+//foundry will not recognize this pathway like remix
+// import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+//we need to use/install the github repository https://github.com/smartcontractkit/chainlink-brownie-contracts
+//on the terminal first run
+// forge install smartcontractkit/chainlink-brownie-contracts --no-commit
+//can run also with latest version
+// forge install smartcontractkit/chainlink-brownie-contracts@1.3.0 --no-commit
+
+//then after installed need to redirect pathways from @chainlink to local repository installed
+//means when @chainlink/contracts/ replace with lib/chainlink-brownie-contracts/contracts/src/x
+// remappings = [
+//   '@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/src/',
+// ]
+
+//-------------------------------TESTS-----------------------
+//4 types of tests
+//What can we do to work with addresses outside of our system?
+//1. UNIT
+//- Testing an specific part of our code
+
+//2.Integration
+// -Testing how our code works with other parts of our code.
+
+//3.Forked
+// - Testing our code on a simulated real enviroment.
+
+//4.Staging
+// - Testing our code in a real enviroment that is not production
+
+// forge test -m nameOfTheFunction -vvv
+//then it will run the test only on the fucntion we have written
+
+//checking which parts of our codes are covered by tests
+// forge coverage --fork-url $SEPOLIA_RPC_URL

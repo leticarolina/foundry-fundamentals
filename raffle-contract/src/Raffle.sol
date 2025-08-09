@@ -29,6 +29,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
         CALCULATING //1
     }
 
+    // State variables
+    address payable[] private s_players; // Array to store players' addresses
+    address payable private s_recentWinner;
+    RaffleState private s_raffleState; //start with OPEN state
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
     uint256 private s_lastTimeStamp;
@@ -40,14 +44,11 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private immutable i_callbackGasLimit;
     uint32 private constant NUM_WORDS = 1;
-    address payable[] private s_players; // Array to store players' addresses
-    address payable private s_recentWinner;
-    RaffleState private s_raffleState; //start with OPEN state
 
     //events
     event RaffleEntered(address indexed player, uint256 amount);
     event WinnerPicked(address indexed winner);
-    event RequestedRaffleWinner(uint256 indexed requestId);
+    event RequestedRaffleWinner(uint256 indexed requestId); // Event emitted when a request for a random winner is made
 
     constructor(
         uint256 entranceFee,
@@ -84,7 +85,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     //function to check if upkeep is needed
-    // This function is called by the Chainlink Keeper to check if upkeep is needed
+    // This function is called by the Chainlink Keeper called performUpkeep
+    // It checks if the raffle needs upkeep, such as if enough time has passed, if there are players, and if the contract has a balance
+    // It returns a boolean indicating if upkeep is needed and a bytes array for performData (not used here)
+    // The function is public view, meaning it can be called externally to check the state of the raffle
     function checkUpkeep(
         bytes memory /* checkData */
     ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
@@ -97,7 +101,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     //former pickWinner function
-    // This function is called by the Chainlink Keeper to check if upkeep is needed
+    // This function is called by Chainlink Keepers when upkeep is needed
+    //it calls checkUpkeep() to see if the raffle needs upkeep
+    // If upkeep is needed, it changes the raffle state to CALCULATING and requests random words from the VRF Coordinator
+    // The requestId is emitted as an event for tracking purposes
     function performUpkeep(bytes calldata /* performData */) external {
         (bool upkeepNeeded, ) = checkUpkeep("");
         // require(upkeepNeeded, "Upkeep not needed");
@@ -111,18 +118,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
         s_raffleState = RaffleState.CALCULATING;
 
-        // VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
-        //     .RandomWordsRequest({
-        //         keyHash: i_keyHash,
-        //         subId: i_subscriptionId,
-        //         requestConfirmations: REQUEST_CONFIRMATIONS,
-        //         callbackGasLimit: i_callbackGasLimit,
-        //         numWords: NUM_WORDS,
-        //         extraArgs: VRFV2PlusClient._argsToBytes(
-        //             VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
-        //         )
-        //     });
-
+        // Request random words from the VRF Coordinator
+        // The request is built using the VRFV2PlusClient library, which encodes the request parameters in a memory struct
         uint256 requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: i_keyHash,
@@ -132,7 +129,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
                 )
             })
         );
@@ -144,6 +141,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //checks are the conditions that must be met before executing the function
     //effects are the internal changes made to the contract state
     //interactions are the external calls made to other contracts or addresses
+
     // This function is called by the VRF Coordinator when it has a random number for us
     // requestId is the ID of the request, and randomWords is an array of random numbers
     // We can use these random numbers to pick a winner or perform other action
@@ -155,6 +153,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         address payable winner = s_players[indexOfWinner];
         s_recentWinner = winner;
 
+        // Update all internal state before making any external call.
         delete s_players; // Reset the players array, sets the length of the array to 0. cheaper gas
         s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
         s_lastTimeStamp = block.timestamp; // Update the last time stamp
@@ -178,5 +177,14 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
+    }
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
+    }
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+    function getLastTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
     }
 }

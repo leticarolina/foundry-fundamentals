@@ -47,7 +47,7 @@ contract CreateSubscription is Script, CodeConstants {
 // This script is used to fund the Chainlink VRF subscription with LINK tokens
 // It can be used to fund the subscription on any network, including local development networks.
 contract FundSubscription is Script, CodeConstants {
-    uint256 public constant FUND_AMOUNT = 3 ether;
+    uint256 public constant FUND_AMOUNT = 10 ether;
 
     function fundSubscriptionUsingConfig() public {
         HelperConfig helperConfig = new HelperConfig();

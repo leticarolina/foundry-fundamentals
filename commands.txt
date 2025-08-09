@@ -20,4 +20,9 @@
 //rm = remove
 //-r = Means recursive — it tells the system to delete the folder and everything inside it (subfolders, files, etc.).
 // -f =  force — it doesn’t ask for confirmation even if files are write-protected.
-//mkdir = make directory, This creates a new folder 
+//mkdir = make directory, This creates a new folder
+//cat  = read a file
+//grep = search for a word in a file
+//cat commands.txt = read the file commands.txt to the terminal
+//cat coverage.txt | grep Raffle.sol -A 30 = read the file coverage.txt and search for the word Raffle.sol and show 30 lines after it
+//cat coverage.txt | grep Raffle.sol -A 40 > raffle_coverage.txt  = '' then save it to a new file called raffle_coverage.txt
