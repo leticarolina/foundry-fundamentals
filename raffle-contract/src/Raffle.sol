@@ -11,6 +11,7 @@ pragma solidity ^0.8.19;
 import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol"; //Base contract that gives your contract access to the fulfillRandomWords() callback
 import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol"; // Library that provides helper functions for VRF requests, that builds the request in memory (RandomWordsRequest struct + encoding extraArgs)
 import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol"; // Interface to talk to the actual Chainlink Coordinator contract deployed on-chain. which allows us to request random words.
+import {AutomationCompatibleInterface} from "@chainlink/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 contract Raffle is VRFConsumerBaseV2Plus {
     // Custom Errors
@@ -22,6 +23,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 numPlayers,
         uint256 raffleState
     );
+    error Raffle__LotteryIsCalculatingWinner();
 
     enum RaffleState {
         //enum can also be uint256
@@ -29,9 +31,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         CALCULATING //1
     }
 
-    // State variables
     address payable[] private s_players; // Array to store players' addresses
     address payable private s_recentWinner;
+    // State variables
     RaffleState private s_raffleState; //start with OPEN state
     uint256 private immutable i_entranceFee;
     uint256 private immutable i_interval;
@@ -106,8 +108,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // If upkeep is needed, it changes the raffle state to CALCULATING and requests random words from the VRF Coordinator
     // The requestId is emitted as an event for tracking purposes
     function performUpkeep(bytes calldata /* performData */) external {
-        (bool upkeepNeeded, ) = checkUpkeep("");
-        // require(upkeepNeeded, "Upkeep not needed");
+        (bool upkeepNeeded, ) = checkUpkeep(""); // other require(upkeepNeeded, "Upkeep not needed");
+
         if (!upkeepNeeded) {
             revert Raffle__UpkeepNotNeeded(
                 address(this).balance,
@@ -115,9 +117,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 uint256(s_raffleState)
             );
         }
-
         s_raffleState = RaffleState.CALCULATING;
-
         // Request random words from the VRF Coordinator
         // The request is built using the VRFV2PlusClient library, which encodes the request parameters in a memory struct
         uint256 requestId = s_vrfCoordinator.requestRandomWords(
@@ -129,7 +129,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
                 )
             })
         );
@@ -152,16 +152,21 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable winner = s_players[indexOfWinner];
         s_recentWinner = winner;
+        emit WinnerPicked(winner);
 
         // Update all internal state before making any external call.
         delete s_players; // Reset the players array, sets the length of the array to 0. cheaper gas
-        s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
+        // s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
         s_lastTimeStamp = block.timestamp; // Update the last time stamp
         emit WinnerPicked(winner);
 
         // Transfer the prize to the winner
         (bool success, ) = winner.call{value: address(this).balance}("");
         require(success, "Transfer failed");
+
+        if (!success) {
+            revert Raffle__transferFailed();
+        }
 
         s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
     }

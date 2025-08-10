@@ -5,6 +5,7 @@ libs = ["lib"]
 remappings = [
     '@chainlink/=lib/chainlink/contracts/',
     '@solmate/=lib/solmate/src/',
+    '@openzeppelin/=lib/openzeppelin-contracts/',
 ]
 fs_permissions = [
     { access = "read", path = "./broadcast" },

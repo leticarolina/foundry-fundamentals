@@ -64,7 +64,7 @@ contract HelperConfig is Script {
             return activeNetworkConfig;
         }
 
-        vm.startBroadcast();
+        vm.startBroadcast(config.account);
         // Deploy a new MockV3Aggregator contract (a fake price feed for testing purposes)
         // DECIMALS: Number of decimals the mock price feed supports
         // INITIAL_PRICE: The initial price value for the mock price feed

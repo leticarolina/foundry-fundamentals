@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import {Script, console} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
@@ -22,13 +22,13 @@ contract DeployRaffle is Script {
         // if (config.subscriptionId == 0) {
         //     //create a new subscription if subscriptionId is 0
         //     CreateSubscription createSubscription = new CreateSubscription();
-        //     // (config.subscriptionId, config.vrfCoordinator) = createSubscription
-        //     //     .createSubscription(config.vrfCoordinator);
-        //     (uint256 subId, address vrfCoord) = createSubscription
+        //     (config.subscriptionId, config.vrfCoordinator) = createSubscription
         //         .createSubscription(config.vrfCoordinator);
-        //     config.subscriptionId = uint64(subId);
-        //     config.vrfCoordinator = vrfCoord;
-        //     console.logUint(subId);
+        //     // (uint256 subId, address vrfCoord) = createSubscription;
+        //     //     .createSubscription(config.vrfCoordinator);
+        //     // config.subscriptionId = uint64(subId);
+        //     // config.vrfCoordinator = vrfCoord;
+        //     // console.logUint(subId);
 
         //     //fund the subscription with LINK tokens
         //     FundSubscription fundSubscription = new FundSubscription();
@@ -38,23 +38,24 @@ contract DeployRaffle is Script {
         //         config.token
         //     );
 
-        //     helperConfig.setConfig(block.chainid, config);
+        //     // helperConfig.setConfig(block.chainid, config);
         // }
 
         if (config.subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
             (config.subscriptionId, config.vrfCoordinator) = createSubscription
-                .createSubscription(config.vrfCoordinator);
+                .createSubscription(config.vrfCoordinator, config.account);
 
             FundSubscription fundSubscription = new FundSubscription();
             fundSubscription.fundSubscription(
                 config.vrfCoordinator,
                 config.subscriptionId,
-                config.token
+                config.token,
+                config.account
             );
         }
 
-        vm.startBroadcast();
+        vm.startBroadcast(config.account); // Start broadcasting transactions from the specified account
         raffle = new Raffle(
             config.entranceFee,
             config.interval,
@@ -69,7 +70,8 @@ contract DeployRaffle is Script {
         addConsumer.addConsumer(
             address(raffle),
             config.vrfCoordinator,
-            config.subscriptionId
+            config.subscriptionId,
+            config.account
         );
 
         // VRFCoordinatorV2_5Mock(config.vrfCoordinator).addConsumer(

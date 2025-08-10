@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 import {Script, console} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+// import {VRFCoordinatorV2PlusMock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2PlusMock.sol";
 import {LinkToken} from "../test/mocks/TokenToFundVRF.sol";
 
 abstract contract CodeConstants {
@@ -26,8 +27,11 @@ contract HelperConfig is CodeConstants, Script {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address token; // Optional, can be used for native token payments
+        uint256 account;
     }
 
+    uint256 public constant DEFAULT_ANVIL_KEY =
+        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
     NetworkConfig public activeNetworkConfig;
     mapping(uint256 chainId => NetworkConfig) public networkConfigs;
 
@@ -58,7 +62,7 @@ contract HelperConfig is CodeConstants, Script {
         }
     }
 
-    function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
+    function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
         return
             NetworkConfig({
                 entranceFee: 0.01 ether, // 1e16
@@ -66,8 +70,9 @@ contract HelperConfig is CodeConstants, Script {
                 vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, //this is the keyhash aka gas lane for Sepolia
                 callbackGasLimit: 500000, // 500,000 gas
-                subscriptionId: 0,
-                token: 0x779877A7B0D9E8603169DdbD7836e478b4624789 // Sepolia ETH token address
+                subscriptionId: 59348555989737605849604285057428249510813332769843048132307428824801730465258, // Subscription ID for Sepolia
+                token: 0x779877A7B0D9E8603169DdbD7836e478b4624789, // Sepolia ETH token address,
+                account: vm.envUint("SEPOLIA_PK") // Optional, can be used for native token payments,
             });
     }
 
@@ -146,7 +151,7 @@ contract HelperConfig is CodeConstants, Script {
 
         console.log(unicode" Deploying local mocks...");
         // If not, create a new mock VRFCoordinator and return the config.
-        vm.startBroadcast();
+        vm.startBroadcast(DEFAULT_ANVIL_KEY);
         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
             MOCK_BASE_FEE,
             MOCK_GAS_PRICE,
@@ -166,7 +171,8 @@ contract HelperConfig is CodeConstants, Script {
             keyHash: 0x0, // gas lane doesn't matter for local tests
             callbackGasLimit: 500000,
             subscriptionId: subscriptionId, // use the created subscription ID
-            token: address(linkToken) // Link token address for local tests
+            token: address(linkToken), // Link token address for local tests
+            account: DEFAULT_ANVIL_KEY // Default sender address for local tests provided by Foundry
         });
 
         networkConfigs[LOCAL_CHAIN_ID] = localConfig;

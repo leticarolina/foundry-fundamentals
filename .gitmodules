@@ -25,3 +25,6 @@
 [submodule "raffle-contract/lib/foundry-devops"]
 	path = raffle-contract/lib/foundry-devops
 	url = https://github.com/Cyfrin/foundry-devops
+[submodule "raffle-contract/lib/openzeppelin-contracts"]
+	path = raffle-contract/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
