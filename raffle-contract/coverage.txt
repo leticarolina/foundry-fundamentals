@@ -1,0 +1,31 @@
+Compiling 48 files with Solc 0.8.30
+Solc 0.8.30 finished in 1.99s
+Compiler run successful!
+Analysing contracts...
+Running tests...
+
+Ran 15 tests for test/unit/RaffleTest.t.sol:RaffleTest
+[PASS] testCheckUpkeepReturnsFalseIfContractHasNoBalance() (gas: 20901)
+[PASS] testCheckUpkeepReturnsFalseIfNotEnoughTimeHasPassed() (gas: 74247)
+[PASS] testCheckUpkeepReturnsFalseIfRaffleNotOpen() (gas: 224995)
+[PASS] testCheckUpkeepReturnsTrueWhenParametersAreGood() (gas: 77097)
+[PASS] testDontAllowPlayersToEnterWhileRaffleIsCalculating() (gas: 230778)
+[PASS] testEmitsEventOnEntrance() (gas: 70451)
+[FAIL: InsufficientBalance()] testFulfillRandomWordsPicksAWinnerResetsAndSendsMoney() (gas: 382994)
+[PASS] testFullfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(uint256) (runs: 257, μ: 89486, ~: 89486)
+[PASS] testPerformUpkeepCanOnlyBeCalledIfCheckUpkeepReturnsTrue() (gas: 221946)
+[PASS] testPerformUpkeepRevertsIfCheckUpkeepReturnsFalse() (gas: 18597)
+[PASS] testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId() (gas: 230209)
+[PASS] testRaffleRecordsPlayersWhenTheyEnter() (gas: 70404)
+[PASS] testRaffleRevertsWHenYouDontSendValue() (gas: 13358)
+[PASS] testRaffleRevertsWhenYouSendInsufficientEth() (gas: 22316)
+[PASS] test_RaffleStartsOpenState() (gas: 11154)
+Suite result: FAILED. 14 passed; 1 failed; 0 skipped; finished in 28.99ms (25.51ms CPU time)
+
+Ran 1 test suite in 123.60ms (28.99ms CPU time): 14 tests passed, 1 failed, 0 skipped (15 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/unit/RaffleTest.t.sol:RaffleTest
+[FAIL: InsufficientBalance()] testFulfillRandomWordsPicksAWinnerResetsAndSendsMoney() (gas: 382994)
+
+Encountered a total of 1 failing tests, 14 tests succeeded

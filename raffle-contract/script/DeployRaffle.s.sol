@@ -3,11 +3,10 @@ pragma solidity ^0.8.0;
 
 import {Script, console} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
-import {HelperConfig} from "./HelperConfig.s.sol";
+import {HelperConfig, CodeConstants} from "./HelperConfig.s.sol";
 import {CreateSubscription, FundSubscription, AddConsumer} from "./Interactions.s.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
-
-contract DeployRaffle is Script {
+contract DeployRaffle is Script, CodeConstants {
     Raffle public raffle;
 
     function run() public {
@@ -41,7 +40,7 @@ contract DeployRaffle is Script {
         //     // helperConfig.setConfig(block.chainid, config);
         // }
 
-        if (config.subscriptionId == 0) {
+        if (config.subscriptionId == LOCAL_CHAIN_ID) {
             CreateSubscription createSubscription = new CreateSubscription();
             (config.subscriptionId, config.vrfCoordinator) = createSubscription
                 .createSubscription(config.vrfCoordinator, config.account);
@@ -53,7 +52,18 @@ contract DeployRaffle is Script {
                 config.token,
                 config.account
             );
+            helperConfig.setConfig(block.chainid, config);
         }
+
+        // if (block.chainid == 31337) {
+        //     FundSubscription fund = new FundSubscription();
+        //     fund.fundSubscription(
+        //         config.vrfCoordinator,
+        //         config.subscriptionId,
+        //         config.token,
+        //         config.account
+        //     );
+        // }
 
         vm.startBroadcast(config.account); // Start broadcasting transactions from the specified account
         raffle = new Raffle(

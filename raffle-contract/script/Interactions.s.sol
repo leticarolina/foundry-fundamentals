@@ -15,7 +15,11 @@ contract CreateSubscription is Script, CodeConstants {
     function createSubscriptionUsingConfig() public returns (uint256, address) {
         HelperConfig helperConfig = new HelperConfig(); //deploying a new instance of the HelperConfig contract in the script environment
         uint256 account = helperConfig.getConfig().account; // get the account from the config
-        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // calling the getConfig() function from the helperConfig instance, which returns a NetworkConfig struct with all your network-specific settings (entranceFee, interval, etc).
+        // address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // calling the getConfig() function from the helperConfig instance, which returns a NetworkConfig struct with all your network-specific settings (entranceFee, interval, etc).
+        address vrfCoordinator = helperConfig
+            .getConfigByChainId(block.chainid)
+            .vrfCoordinator;
+
         (uint256 subId, ) = createSubscription(vrfCoordinator, account); // create a new subscription using the vrfCoordinator address from the config
         return (subId, vrfCoordinator); // return the subscription ID and VRF Coordinator address
     }
@@ -49,9 +53,9 @@ contract CreateSubscription is Script, CodeConstants {
 // This script is used to fund the Chainlink VRF subscription with LINK tokens
 // It can be used to fund the subscription on any network, including local development networks.
 contract FundSubscription is Script, CodeConstants {
-    uint256 public constant FUND_AMOUNT = 10 ether;
+    uint96 public constant FUND_AMOUNT = 10 ether;
 
-    function fundSubscriptionUsingConfig() public {
+    function fundSubscriptionUsingConfig() public payable {
         HelperConfig helperConfig = new HelperConfig();
         address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
@@ -79,17 +83,17 @@ contract FundSubscription is Script, CodeConstants {
         uint256 subscriptionId,
         address linkToken,
         uint256 account
-    ) public {
+    ) public payable {
         console.log("funding subscription:", subscriptionId);
         console.log("using vrfCoordinator:", vrfCoordinator);
         console.log("on chainId:", block.chainid);
 
         if (block.chainid == LOCAL_CHAIN_ID) {
             vm.startBroadcast(account);
-            VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
-                subscriptionId,
-                FUND_AMOUNT
-            );
+            VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription{
+                value: 10 ether
+            }(subscriptionId, FUND_AMOUNT);
+
             vm.stopBroadcast();
         } else {
             console.log(LinkToken(linkToken).balanceOf(msg.sender));

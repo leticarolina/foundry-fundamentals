@@ -26,3 +26,7 @@
 //cat commands.txt = read the file commands.txt to the terminal
 //cat coverage.txt | grep Raffle.sol -A 30 = read the file coverage.txt and search for the word Raffle.sol and show 30 lines after it
 //cat coverage.txt | grep Raffle.sol -A 40 > raffle_coverage.txt  = '' then save it to a new file called raffle_coverage.txt
+//git log -1 =  shows you only the most recent commit in the current repository.
+//git rev-parse HEAD = outputs the full commit hash of the commit your current branch is pointing to.
+//HEAD = the commit I am currently on (could be the latest on the branch or a detached commit).
+//rev-parse = a low-level Git command that takes a “revision” and gives its underlying SHA-1 hash or other info.

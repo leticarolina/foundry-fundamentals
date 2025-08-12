@@ -129,7 +129,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
                 )
             })
         );
@@ -152,12 +152,12 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable winner = s_players[indexOfWinner];
         s_recentWinner = winner;
-        emit WinnerPicked(winner);
 
         // Update all internal state before making any external call.
         delete s_players; // Reset the players array, sets the length of the array to 0. cheaper gas
         // s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
         s_lastTimeStamp = block.timestamp; // Update the last time stamp
+        // s_raffleState = RaffleState.OPEN;
         emit WinnerPicked(winner);
 
         // Transfer the prize to the winner

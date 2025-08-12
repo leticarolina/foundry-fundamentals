@@ -161,7 +161,8 @@ contract HelperConfig is CodeConstants, Script {
         LinkToken linkToken = new LinkToken();
         // uint64 subscriptionId = vrfCoordinatorMock.createSubscription();
         uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
-
+        // vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
+        vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
         vm.stopBroadcast();
 
         NetworkConfig memory localConfig = NetworkConfig({

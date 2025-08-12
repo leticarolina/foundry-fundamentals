@@ -8,6 +8,7 @@ import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {CodeConstants} from "../../script/HelperConfig.s.sol";
+import {SubscriptionAPI} from "@chainlink/src/v0.8/vrf/dev/SubscriptionAPI.sol"; // Import SubscriptionAPI for subscription management
 
 contract RaffleTest is Test, CodeConstants {
     Raffle public raffle;
@@ -35,6 +36,7 @@ contract RaffleTest is Test, CodeConstants {
         DeployRaffle deployer = new DeployRaffle();
         (raffle, helperConfig) = deployer.deployContract();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
+
         entranceFee = config.entranceFee;
         interval = config.interval;
         vrfCoordinator = config.vrfCoordinator;
@@ -44,14 +46,31 @@ contract RaffleTest is Test, CodeConstants {
         linkToken = config.token;
         account = config.account; // get the account from the config
 
-        // VRFCoordinatorV2_5Mock coord = VRFCoordinatorV2_5Mock(vrfCoordinator); //
-        // coord.fundSubscription(subscriptionId, 4 ether); // give it a big balance (mock units)
         vm.deal(PLAYER, STARTING_BALANCE); // give ETH to player
+
+        // After getting config from HelperConfig
+        VRFCoordinatorV2_5Mock coordinator = VRFCoordinatorV2_5Mock(
+            config.vrfCoordinator
+        );
+
+        // fund the subscription's NATIVE balance (not LINK)
+        coordinator.fundSubscription{value: 10 ether}(
+            config.subscriptionId,
+            10 ether
+        );
+
+        // VRFCoordinatorV2_5Mock c = VRFCoordinatorV2_5Mock(vrfCoordinator);
+
+        // // Fill LINK bucket
+        // c.fundSubscription(subscriptionId, 10 ether);
+
+        // Fill native bucket too (so either mode works)
+        // c.fundSubscription{value: 10 ether}(subscriptionId, 10 ether);
     }
 
     //modifier to enter the raffle and warp/foward time so that checkUpkeep returns true
     modifier raffleEntredAndTimePassed() {
-        // STEP 1: Player enters Raffle
+        // STEP 1: Player enters Raffles
         vm.prank(PLAYER);
         raffle.enterRaffle{value: entranceFee}();
         // STEP 2: Fast-forward time and block number
@@ -244,6 +263,7 @@ contract RaffleTest is Test, CodeConstants {
         }
         _;
     }
+
     function testFullfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(
         uint256 randomRequestId
     ) public raffleEntredAndTimePassed skipFork {
@@ -264,50 +284,50 @@ contract RaffleTest is Test, CodeConstants {
         );
     }
 
-    // function testFulfillRandomWordsPicksAWinnerResetsAndSendsMoney()
-    //     public
-    //     raffleEntredAndTimePassed
-    // {
-    //     // Arrange
+    function testFulfillRandomWordsPicksAWinnerResetsAndSendsMoney()
+        public
+        raffleEntredAndTimePassed
+        skipFork
+    {
+        // Arrange
+        address expectedWinner = address(1);
 
-    //     uint256 additionalEntrants = 3; //4 players in total
-    //     uint256 startingIndex = 1; // start from index 1 because index 0 is the PLAYER
-    //     address expectedWinner = address(1);
+        uint256 additionalEntrants = 3; //4 players in total
+        uint256 startingIndex = 1; // start from index 1 because index 0 is the PLAYER
+        for (
+            uint256 i = startingIndex;
+            i < startingIndex + additionalEntrants;
+            i++
+        ) {
+            address player = address(uint160(i)); //create a new player address and convert it to address type
+            hoax(player, STARTING_BALANCE); //hoax will send 10 ether each to the player address
+            raffle.enterRaffle{value: entranceFee}(); // each player enters the raffle
+        }
+        uint256 startingTimeStamp = raffle.getLastTimeStamp(); // get the starting timestamp before we warp time
+        uint256 winnerStartingBalance = expectedWinner.balance; //
 
-    //     for (
-    //         uint256 i = startingIndex;
-    //         i < startingIndex + additionalEntrants;
-    //         i++
-    //     ) {
-    //         address player = address(uint160(i)); //create a new player address and convert it to address type
-    //         hoax(player, STARTING_BALANCE); //hoax will send 10 ether each to the player address
-    //         raffle.enterRaffle{value: entranceFee}(); // each player enters the raffle
-    //     }
-    //     uint256 winnerStartingBalance = expectedWinner.balance; //
-    //     uint256 startingTimeStamp = raffle.getLastTimeStamp(); // get the starting timestamp before we warp time
+        // Act
+        vm.recordLogs();
+        raffle.performUpkeep(""); // emits requestId
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 requestId = entries[1].topics[1];
 
-    //     // Act
-    //     vm.recordLogs();
-    //     raffle.performUpkeep(""); // emits requestId
-    //     Vm.Log[] memory entries = vm.getRecordedLogs();
-    //     bytes32 requestId = entries[1].topics[1];
+        // Pretend to be Chainlink VRF
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
+            uint256(requestId),
+            address(raffle)
+        );
 
-    //     // Pretend to be Chainlink VRF
-    //     VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
-    //         uint256(requestId),
-    //         address(raffle)
-    //     );
+        // Assert
+        address recentWinner = raffle.getRecentWinner();
+        Raffle.RaffleState raffleState = raffle.getRaffleState();
+        uint256 winnerBalance = recentWinner.balance;
+        uint256 endingTimeStamp = raffle.getLastTimeStamp(); // get the ending timestamp after the winner is picked
+        uint256 prize = entranceFee * (additionalEntrants + 1); //prize is the entrance fee multiplied by the number of players (including the PLAYER) entranceFee * 4
 
-    //     // Assert
-    //     address recentWinner = raffle.getRecentWinner();
-    //     Raffle.RaffleState raffleState = raffle.getRaffleState();
-    //     uint256 winnerBalance = recentWinner.balance;
-    //     uint256 endingTimeStamp = raffle.getLastTimeStamp(); // get the ending timestamp after the winner is picked
-    //     uint256 prize = entranceFee * (additionalEntrants + 1); //prize is the entrance fee multiplied by the number of players (including the PLAYER) entranceFee * 4
-
-    //     assert(expectedWinner == recentWinner);
-    //     assert(uint256(raffleState) == 0);
-    //     assert(winnerBalance == winnerStartingBalance + prize);
-    //     assert(endingTimeStamp > startingTimeStamp);
-    // }
+        assert(expectedWinner == recentWinner);
+        assert(uint256(raffleState) == 0);
+        assert(winnerBalance == winnerStartingBalance + prize);
+        assert(endingTimeStamp > startingTimeStamp);
+    }
 }
