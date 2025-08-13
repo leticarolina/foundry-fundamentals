@@ -32,6 +32,8 @@ contract HelperConfig is CodeConstants, Script {
 
     uint256 public constant DEFAULT_ANVIL_KEY =
         0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    // address public constant DEFAULT_ANVIL_KEY =
+    //     0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     NetworkConfig public activeNetworkConfig;
     mapping(uint256 chainId => NetworkConfig) public networkConfigs;
 
@@ -159,10 +161,17 @@ contract HelperConfig is CodeConstants, Script {
         );
 
         LinkToken linkToken = new LinkToken();
-        // uint64 subscriptionId = vrfCoordinatorMock.createSubscription();
+
+        // uint256 subscriptionId = 25027070020321881340250942419870798739630753771498781873077165221537535202702;
         uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
+
         // vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
-        vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
+
+        // VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription(
+        //     subscriptionId,
+        //     10 ether
+        // );
+
         vm.stopBroadcast();
 
         NetworkConfig memory localConfig = NetworkConfig({

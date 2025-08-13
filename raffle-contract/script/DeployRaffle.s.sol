@@ -40,7 +40,7 @@ contract DeployRaffle is Script, CodeConstants {
         //     // helperConfig.setConfig(block.chainid, config);
         // }
 
-        if (config.subscriptionId == LOCAL_CHAIN_ID) {
+        if (config.subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
             (config.subscriptionId, config.vrfCoordinator) = createSubscription
                 .createSubscription(config.vrfCoordinator, config.account);

@@ -14,30 +14,36 @@ import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
 contract CreateSubscription is Script, CodeConstants {
     function createSubscriptionUsingConfig() public returns (uint256, address) {
         HelperConfig helperConfig = new HelperConfig(); //deploying a new instance of the HelperConfig contract in the script environment
-        uint256 account = helperConfig.getConfig().account; // get the account from the config
-        // address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // calling the getConfig() function from the helperConfig instance, which returns a NetworkConfig struct with all your network-specific settings (entranceFee, interval, etc).
-        address vrfCoordinator = helperConfig
+        uint256 account = helperConfig
             .getConfigByChainId(block.chainid)
-            .vrfCoordinator;
+            .account; // get the account from the config
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // calling the getConfig() function from the helperConfig instance, which returns a NetworkConfig struct with all your network-specific settings (entranceFee, interval, etc).
+        // address vrfCoordinator = helperConfig
+        //     .getConfigByChainId(block.chainid)
+        //     .vrfCoordinator;
 
-        (uint256 subId, ) = createSubscription(vrfCoordinator, account); // create a new subscription using the vrfCoordinator address from the config
-        return (subId, vrfCoordinator); // return the subscription ID and VRF Coordinator address
+        // address account = helperConfig
+        //     .getConfigByChainId(block.chainid)
+        //     .account;
+
+        // (uint256 subId, ) = createSubscription(vrfCoordinator, account); // create a new subscription using the vrfCoordinator address from the config
+        return createSubscription(vrfCoordinator, account); // return the subscription ID and VRF Coordinator address
     }
 
     function createSubscription(
         address vrfCoordinator,
         uint256 account
     ) public returns (uint256, address) {
-        // console.log(
-        //     "creating subscription of VRFCoordinatorV2 on chain:",
-        //     block.chainid
-        // );
+        console.log(
+            "creating subscription of VRFCoordinatorV2 on chain:",
+            block.chainid
+        );
         vm.startBroadcast(account);
         uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinator)
             .createSubscription();
         vm.stopBroadcast();
-        // console.log("subscription created with id:", subId);
-        // console.log("update the subscriptionId in the HelperConfig.s.sol file");
+        console.log("subscription created with id:", subId);
+        console.log("update the subscriptionId in the HelperConfig.s.sol file");
 
         return (subId, vrfCoordinator);
     }
@@ -90,10 +96,14 @@ contract FundSubscription is Script, CodeConstants {
 
         if (block.chainid == LOCAL_CHAIN_ID) {
             vm.startBroadcast(account);
-            VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription{
-                value: 10 ether
-            }(subscriptionId, FUND_AMOUNT);
+            // VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription{
+            //     value: 10 ether
+            // }(subscriptionId, FUND_AMOUNT);
 
+            VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
+                subscriptionId,
+                10 ether
+            );
             vm.stopBroadcast();
         } else {
             console.log(LinkToken(linkToken).balanceOf(msg.sender));
@@ -119,7 +129,7 @@ contract FundSubscription is Script, CodeConstants {
                            ADDING CONSUMER
     //////////////////////////////////////////////////////////////*/
 // This script is used to add a consumer to the Chainlink VRF subscription
-contract AddConsumer is Script {
+contract AddConsumer is Script, CodeConstants {
     function addConsumer(
         address raffle,
         address vrfCoordinator,
@@ -143,18 +153,18 @@ contract AddConsumer is Script {
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
         uint256 account = helperConfig.getConfig().account; // get the account from the config
 
-        if (subscriptionId == 0) {
-            CreateSubscription createSub = new CreateSubscription();
-            (uint256 updatedSubId, address updatedVRFv2) = createSub.run();
-            subscriptionId = updatedSubId;
-            vrfCoordinator = updatedVRFv2;
-            console.log(
-                "New SubId Created! ",
-                subscriptionId,
-                "VRF Address: ",
-                vrfCoordinator
-            );
-        }
+        // if (subscriptionId == 0) {
+        //     CreateSubscription createSub = new CreateSubscription();
+        //     (uint256 updatedSubId, address updatedVRFv2) = createSub.run();
+        //     subscriptionId = updatedSubId;
+        //     vrfCoordinator = updatedVRFv2;
+        //     console.log(
+        //         "New SubId Created! ",
+        //         subscriptionId,
+        //         "VRF Address: ",
+        //         vrfCoordinator
+        //     );
+        // }
 
         addConsumer(raffle, vrfCoordinator, subscriptionId, account);
     }

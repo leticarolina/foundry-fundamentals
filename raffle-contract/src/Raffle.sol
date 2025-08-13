@@ -23,7 +23,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 numPlayers,
         uint256 raffleState
     );
-    error Raffle__LotteryIsCalculatingWinner();
+    // error Raffle__LotteryIsCalculatingWinner();
 
     enum RaffleState {
         //enum can also be uint256
@@ -45,7 +45,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private immutable i_subscriptionId;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private immutable i_callbackGasLimit;
-    uint32 private constant NUM_WORDS = 1;
+    uint32 private constant NUM_WORDS = 1; // Number of random words to request
 
     //events
     event RaffleEntered(address indexed player, uint256 amount);
@@ -110,6 +110,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function performUpkeep(bytes calldata /* performData */) external {
         (bool upkeepNeeded, ) = checkUpkeep(""); // other require(upkeepNeeded, "Upkeep not needed");
 
+        // log linkBal to confirm it’s > 0
+
         if (!upkeepNeeded) {
             revert Raffle__UpkeepNotNeeded(
                 address(this).balance,
@@ -129,7 +131,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true})
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
                 )
             })
         );
@@ -179,9 +181,14 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function getRaffleState() external view returns (RaffleState) {
         return s_raffleState;
     }
-
+    // returns the player at a specific index
     function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
+    }
+
+    // returns the entire array of players
+    function getPlayers() public view returns (address payable[] memory) {
+        return s_players;
     }
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
@@ -191,5 +198,20 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
     function getLastTimeStamp() public view returns (uint256) {
         return s_lastTimeStamp;
+    }
+
+    // get the raffle interval
+    function getInterval() public view returns (uint256) {
+        return i_interval;
+    }
+
+    function getTimeUntilNextDraw() public view returns (uint256) {
+        if (s_raffleState != RaffleState.OPEN) return 0;
+        uint256 next = s_lastTimeStamp + i_interval;
+        return block.timestamp >= next ? 0 : (next - block.timestamp);
+    }
+
+    function getNumOfWords() public pure returns (uint32) {
+        return NUM_WORDS;
     }
 }
