@@ -167,13 +167,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
         // Transfer the prize to the winner
         (bool success, ) = winner.call{value: address(this).balance}("");
-        require(success, "Transfer failed");
 
         if (!success) {
             revert Raffle__transferFailed();
         }
-
-        // s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
     }
 
     // Getter Functions
@@ -192,6 +189,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // returns the entire array of players
     function getPlayers() public view returns (address payable[] memory) {
         return s_players;
+    }
+
+    function getPlayersLength() public view returns (uint256) {
+        return s_players.length;
     }
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
@@ -216,5 +217,12 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function getNumOfWords() public pure returns (uint32) {
         return NUM_WORDS;
+    }
+    function getVrfCoordinator() public view returns (address) {
+        return address(i_vrfCoordinator);
+    }
+
+    function getSubscriptionId() public view returns (uint256) {
+        return i_subscriptionId;
     }
 }

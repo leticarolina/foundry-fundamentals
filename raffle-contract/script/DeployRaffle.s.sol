@@ -56,6 +56,17 @@ contract DeployRaffle is Script, CodeConstants {
             helperConfig.setConfig(block.chainid, config);
         }
 
+        if (config.subscriptionId != 0) {
+            FundSubscription fundSubscription = new FundSubscription();
+            fundSubscription.fundSubscription(
+                config.vrfCoordinator,
+                config.subscriptionId,
+                config.token,
+                config.account
+            );
+            helperConfig.setConfig(block.chainid, config);
+        }
+
         // if (block.chainid == 31337) {
         //     FundSubscription fund = new FundSubscription();
         //     fund.fundSubscription(
@@ -85,6 +96,10 @@ contract DeployRaffle is Script, CodeConstants {
             config.subscriptionId,
             config.account
         );
+
+        console.log("Raffle deployed:", address(raffle));
+        console.log("Coordinator  :", config.vrfCoordinator);
+        console.log("SubId        :", config.subscriptionId);
 
         // VRFCoordinatorV2_5Mock(config.vrfCoordinator).addConsumer(
         //     config.subscriptionId,
