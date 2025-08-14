@@ -6,6 +6,7 @@ import {Raffle} from "../src/Raffle.sol";
 import {HelperConfig, CodeConstants} from "./HelperConfig.s.sol";
 import {CreateSubscription, FundSubscription, AddConsumer} from "./Interactions.s.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+
 contract DeployRaffle is Script, CodeConstants {
     Raffle public raffle;
 
@@ -65,6 +66,7 @@ contract DeployRaffle is Script, CodeConstants {
         //     );
         // }
 
+        //Broadcasts deployment of Raffle with the config values.
         vm.startBroadcast(config.account); // Start broadcasting transactions from the specified account
         raffle = new Raffle(
             config.entranceFee,

@@ -5,12 +5,13 @@ import {Raffle} from "../src/Raffle.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 // import {VRFCoordinatorV2PlusMock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2PlusMock.sol";
 import {LinkToken} from "../test/mocks/TokenToFundVRF.sol";
+import {CreateSubscription} from "./Interactions.s.sol";
 
 abstract contract CodeConstants {
     // VRF Mock values
-    uint96 public MOCK_BASE_FEE = 0.25 ether;
-    uint96 public MOCK_GAS_PRICE = 0.25 ether; // 0.25 LINK per gas
-    int256 public MOCK_WEI_PER_UNIT_LINK = 4e15;
+    uint96 public MOCK_BASE_FEE = 0;
+    uint96 public MOCK_GAS_PRICE = 1 gwei; // 0.25 LINK per gas
+    int256 public MOCK_WEI_PER_UNIT_LINK = 1e18;
 
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
@@ -30,11 +31,14 @@ contract HelperConfig is CodeConstants, Script {
         uint256 account;
     }
 
-    uint256 public constant DEFAULT_ANVIL_KEY =
+    uint256 public constant DEFAULT_ANVIL_PRIVATE_KEY =
         0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
     // address public constant DEFAULT_ANVIL_KEY =
     //     0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     NetworkConfig public activeNetworkConfig;
+    //this mapping stores a struct NetworkConfig for each chain ID.
+    // It allows you to access the network configuration for a specific chain ID.
+    //networkConfigs[chainId] = will return the NetworkConfig struct stored for that chain ID.
     mapping(uint256 chainId => NetworkConfig) public networkConfigs;
 
     constructor() {
@@ -69,10 +73,10 @@ contract HelperConfig is CodeConstants, Script {
             NetworkConfig({
                 entranceFee: 0.01 ether, // 1e16
                 interval: 30, // 30 seconds
-                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B, //this value is the address of the VRFCoordinatorV2Plus contract on Sepolia
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, //this is the keyhash aka gas lane for Sepolia
-                callbackGasLimit: 500000, // 500,000 gas
-                subscriptionId: 59348555989737605849604285057428249510813332769843048132307428824801730465258, // Subscription ID for Sepolia
+                callbackGasLimit: 200_000, // 500,000 gas
+                subscriptionId: 59348555989737605849604285057428249510813332769843048132307428824801730465258, // Subscription ID for Sepolia, provided by Chainlink
                 token: 0x779877A7B0D9E8603169DdbD7836e478b4624789, // Sepolia ETH token address,
                 account: vm.envUint("SEPOLIA_PK") // Optional, can be used for native token payments,
             });
@@ -153,7 +157,7 @@ contract HelperConfig is CodeConstants, Script {
 
         console.log(unicode" Deploying local mocks...");
         // If not, create a new mock VRFCoordinator and return the config.
-        vm.startBroadcast(DEFAULT_ANVIL_KEY);
+        vm.startBroadcast(DEFAULT_ANVIL_PRIVATE_KEY);
         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
             MOCK_BASE_FEE,
             MOCK_GAS_PRICE,
@@ -164,10 +168,11 @@ contract HelperConfig is CodeConstants, Script {
 
         // uint256 subscriptionId = 25027070020321881340250942419870798739630753771498781873077165221537535202702;
         uint256 subscriptionId = vrfCoordinatorMock.createSubscription();
+        // uint256 newSubscriptionId = CreateSubscription(address(this))
+        //     .createSubscriptionUsingConfig()
+        //     .subId;
 
-        // vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
-
-        // VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription(
+        // VRFCoordinatorV2_5Mock(vrfCoordinatorMock).fundSubscription( // vrfCoordinatorMock.fundSubscription(subscriptionId, 10 ether);
         //     subscriptionId,
         //     10 ether
         // );
@@ -182,7 +187,7 @@ contract HelperConfig is CodeConstants, Script {
             callbackGasLimit: 500000,
             subscriptionId: subscriptionId, // use the created subscription ID
             token: address(linkToken), // Link token address for local tests
-            account: DEFAULT_ANVIL_KEY // Default sender address for local tests provided by Foundry
+            account: DEFAULT_ANVIL_PRIVATE_KEY // Default sender address for local tests provided by Foundry
         });
 
         networkConfigs[LOCAL_CHAIN_ID] = localConfig;

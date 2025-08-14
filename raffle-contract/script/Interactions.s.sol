@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import {Script, console} from "forge-std/Script.sol";
-import {HelperConfig, CodeConstants} from "./HelperConfig.s.sol";
+import {CodeConstants, HelperConfig} from "./HelperConfig.s.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/mocks/TokenToFundVRF.sol";
 import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
@@ -11,7 +11,7 @@ import {DevOpsTools} from "../lib/foundry-devops/src/DevOpsTools.sol";
     //////////////////////////////////////////////////////////////*/
 // This is a script to create a Chainlink VRF subscription and fund it with tokens
 // It can be used to create a subscription for Chainlink VRF on any network, including local development networks.
-contract CreateSubscription is Script, CodeConstants {
+contract CreateSubscription is Script {
     function createSubscriptionUsingConfig() public returns (uint256, address) {
         HelperConfig helperConfig = new HelperConfig(); //deploying a new instance of the HelperConfig contract in the script environment
         uint256 account = helperConfig
@@ -58,8 +58,8 @@ contract CreateSubscription is Script, CodeConstants {
     //////////////////////////////////////////////////////////////*/
 // This script is used to fund the Chainlink VRF subscription with LINK tokens
 // It can be used to fund the subscription on any network, including local development networks.
-contract FundSubscription is Script, CodeConstants {
-    uint96 public constant FUND_AMOUNT = 10 ether;
+contract FundSubscription is Script {
+    uint96 public constant FUND_AMOUNT = 50 ether;
 
     function fundSubscriptionUsingConfig() public payable {
         HelperConfig helperConfig = new HelperConfig();
@@ -94,7 +94,7 @@ contract FundSubscription is Script, CodeConstants {
         console.log("using vrfCoordinator:", vrfCoordinator);
         console.log("on chainId:", block.chainid);
 
-        if (block.chainid == LOCAL_CHAIN_ID) {
+        if (block.chainid == 31337) {
             vm.startBroadcast(account);
             // VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription{
             //     value: 10 ether
@@ -102,8 +102,9 @@ contract FundSubscription is Script, CodeConstants {
 
             VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
                 subscriptionId,
-                10 ether
+                FUND_AMOUNT
             );
+
             vm.stopBroadcast();
         } else {
             console.log(LinkToken(linkToken).balanceOf(msg.sender));
@@ -129,7 +130,7 @@ contract FundSubscription is Script, CodeConstants {
                            ADDING CONSUMER
     //////////////////////////////////////////////////////////////*/
 // This script is used to add a consumer to the Chainlink VRF subscription
-contract AddConsumer is Script, CodeConstants {
+contract AddConsumer is Script {
     function addConsumer(
         address raffle,
         address vrfCoordinator,

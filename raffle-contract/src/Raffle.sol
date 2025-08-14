@@ -102,7 +102,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         return (upkeepNeeded, "0x0");
     }
 
-    //former pickWinner function
+    //called by Chainlink Keepers when upkeep is needed, it is automatically called by the Chainlink Keepers network
     // This function is called by Chainlink Keepers when upkeep is needed
     //it calls checkUpkeep() to see if the raffle needs upkeep
     // If upkeep is needed, it changes the raffle state to CALCULATING and requests random words from the VRF Coordinator
@@ -144,6 +144,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //effects are the internal changes made to the contract state
     //interactions are the external calls made to other contracts or addresses
 
+    //basically a pickWinner function
     // This function is called by the VRF Coordinator when it has a random number for us
     // requestId is the ID of the request, and randomWords is an array of random numbers
     // We can use these random numbers to pick a winner or perform other action
@@ -151,15 +152,17 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 /*requestId*/,
         uint256[] calldata randomWords
     ) internal override {
+        //pick a winner from the players array using the random number
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable winner = s_players[indexOfWinner];
         s_recentWinner = winner;
 
         // Update all internal state before making any external call.
         delete s_players; // Reset the players array, sets the length of the array to 0. cheaper gas
-        // s_players = new address payable[](0); // Initialize a new empty array, Technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
+        // s_players = new address payable[](0); // Initialize a new empty array, technically replaces the previous array in storage with a new one of length 0. Slightly more gas-expensive
         s_lastTimeStamp = block.timestamp; // Update the last time stamp
-        // s_raffleState = RaffleState.OPEN;
+        s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
+
         emit WinnerPicked(winner);
 
         // Transfer the prize to the winner
@@ -170,7 +173,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
             revert Raffle__transferFailed();
         }
 
-        s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
+        // s_raffleState = RaffleState.OPEN; // Reset the raffle state to OPEN
     }
 
     // Getter Functions
