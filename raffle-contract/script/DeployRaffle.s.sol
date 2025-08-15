@@ -19,28 +19,6 @@ contract DeployRaffle is Script, CodeConstants {
         AddConsumer addConsumer = new AddConsumer();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig(); // calling the getConfig() function from the helperConfig instance, which returns a NetworkConfig struct with all your network-specific settings (entranceFee, interval, etc).
 
-        // if (config.subscriptionId == 0) {
-        //     //create a new subscription if subscriptionId is 0
-        //     CreateSubscription createSubscription = new CreateSubscription();
-        //     (config.subscriptionId, config.vrfCoordinator) = createSubscription
-        //         .createSubscription(config.vrfCoordinator);
-        //     // (uint256 subId, address vrfCoord) = createSubscription;
-        //     //     .createSubscription(config.vrfCoordinator);
-        //     // config.subscriptionId = uint64(subId);
-        //     // config.vrfCoordinator = vrfCoord;
-        //     // console.logUint(subId);
-
-        //     //fund the subscription with LINK tokens
-        //     FundSubscription fundSubscription = new FundSubscription();
-        //     fundSubscription.fundSubscription(
-        //         config.vrfCoordinator,
-        //         config.subscriptionId,
-        //         config.token
-        //     );
-
-        //     // helperConfig.setConfig(block.chainid, config);
-        // }
-
         if (config.subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
             (config.subscriptionId, config.vrfCoordinator) = createSubscription
@@ -67,16 +45,6 @@ contract DeployRaffle is Script, CodeConstants {
             helperConfig.setConfig(block.chainid, config);
         }
 
-        // if (block.chainid == 31337) {
-        //     FundSubscription fund = new FundSubscription();
-        //     fund.fundSubscription(
-        //         config.vrfCoordinator,
-        //         config.subscriptionId,
-        //         config.token,
-        //         config.account
-        //     );
-        // }
-
         //Broadcasts deployment of Raffle with the config values.
         vm.startBroadcast(config.account); // Start broadcasting transactions from the specified account
         raffle = new Raffle(
@@ -96,15 +64,6 @@ contract DeployRaffle is Script, CodeConstants {
             config.subscriptionId,
             config.account
         );
-
-        console.log("Raffle deployed:", address(raffle));
-        console.log("Coordinator  :", config.vrfCoordinator);
-        console.log("SubId        :", config.subscriptionId);
-
-        // VRFCoordinatorV2_5Mock(config.vrfCoordinator).addConsumer(
-        //     config.subscriptionId,
-        //     address(raffle)
-        // );
 
         return (raffle, helperConfig);
     }
