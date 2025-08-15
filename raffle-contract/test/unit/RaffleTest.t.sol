@@ -9,8 +9,10 @@ import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {CodeConstants} from "../../script/HelperConfig.s.sol";
 import {SubscriptionAPI} from "@chainlink/src/v0.8/vrf/dev/SubscriptionAPI.sol"; // Import SubscriptionAPI for subscription management
+import {WinnerCannotReceiveEth} from "../mocks/WinnerCannotReceiveEth.sol"; // Import the mock contract for testing
+import {BaseTest} from "../utils/BaseTest.sol";
 
-contract RaffleTest is Test, CodeConstants {
+contract RaffleTest is Test, CodeConstants, BaseTest {
     Raffle public raffle;
     HelperConfig public helperConfig;
 
@@ -75,6 +77,27 @@ contract RaffleTest is Test, CodeConstants {
         }
         _;
     }
+
+    // // Helper: safely parse requestId from coordinator's RandomWordsRequested log
+    // function _findVRFRequestIdFromCoordinatorLogs(
+    //     Vm.Log[] memory logs,
+    //     address coordinator
+    // ) internal pure returns (uint256) {
+    //     bytes32 sig = keccak256(
+    //         "RandomWordsRequested(bytes32,uint256,uint256,uint256,uint16,uint32,uint32,bytes,address)"
+    //     );
+    //     for (uint256 i = logs.length; i > 0; i--) {
+    //         Vm.Log memory log = logs[i - 1];
+    //         if (log.emitter != coordinator) continue;
+    //         if (log.topics.length == 0 || log.topics[0] != sig) continue;
+    //         (uint256 requestId, , , , , ) = abi.decode(
+    //             log.data,
+    //             (uint256, uint256, uint16, uint32, uint32, bytes)
+    //         );
+    //         return requestId;
+    //     }
+    //     return 0;
+    // }
 
     /*//////////////////////////////////////////////////////////////
                            ENTER RAFFLE
@@ -318,7 +341,7 @@ contract RaffleTest is Test, CodeConstants {
         address expectedWinner = address(1);
 
         uint256 additionalEntrants = 3; //4 players in total
-        uint256 startingIndex = 1; // start from index 1 because index 0 is the PLAYER
+        uint256 startingIndex = 1; // start from index 1 because index 0 is the PLAYER(leticia)
         for (
             uint256 i = startingIndex;
             i < startingIndex + additionalEntrants;
@@ -335,18 +358,22 @@ contract RaffleTest is Test, CodeConstants {
         vm.roll(block.number + 1);
 
         // Act
+        {
+            address coord = raffle.getVrfCoordinator();
+            uint256 subId = raffle.getSubscriptionId();
 
-        address coord = raffle.getVrfCoordinator();
-        uint256 subId = raffle.getSubscriptionId();
-
-        (uint96 linkBal, , , , ) = VRFCoordinatorV2_5Mock(coord)
-            .getSubscription(subId);
-        assertGt(linkBal, 0, "LINK balance is zero");
+            (uint96 linkBal, , , , ) = VRFCoordinatorV2_5Mock(coord)
+                .getSubscription(subId);
+            assertGt(linkBal, 0, "LINK balance is zero");
+        }
 
         vm.recordLogs();
         raffle.performUpkeep(""); // emits the event RequestedRaffleWinner(requestId)
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        uint256 requestId = _findVRFRequestIdFromCoordinatorLogs(logs, coord);
+        uint256 requestId = _findVRFRequestIdFromCoordinatorLogs(
+            logs,
+            raffle.getVrfCoordinator()
+        );
         // Vm.Log[] memory entries = vm.getRecordedLogs();
         // bytes32 requestId = entries[1].topics[1]; //also works but assuming the requestId is always the second topic
 
@@ -365,38 +392,42 @@ contract RaffleTest is Test, CodeConstants {
         uint256 playersLength = raffle.getPlayersLength(); // get the number of players
 
         assert(uint256(raffleState) == 0); // raffle state should be OPEN again
-        // assert(expectedWinner == recentWinner); // assert that the expected winner is the recent winner
+        assert(expectedWinner == recentWinner);
         assert(winnerBalance == winnerStartingBalance + prize); // winner balance should be increased by the prize amount
         assert(endingTimeStamp > startingTimeStamp); // ending timestamp should be greater than the starting timestamp
         assert(playersLength == 0); // players array should be reset
     }
 
-    // Helper: safely parse requestId from coordinator's RandomWordsRequested log
-    function _findVRFRequestIdFromCoordinatorLogs(
-        Vm.Log[] memory logs,
-        address coordinator
-    ) internal pure returns (uint256) {
-        bytes32 sig = keccak256(
-            "RandomWordsRequested(bytes32,uint256,uint256,uint256,uint16,uint32,uint32,bytes,address)"
-        );
-        for (uint256 i = logs.length; i > 0; i--) {
-            Vm.Log memory log = logs[i - 1];
-            if (log.emitter != coordinator) continue;
-            if (log.topics.length == 0 || log.topics[0] != sig) continue;
-            (
-                uint256 requestId /*preSeed*/ /*minConf*/ /*gasLim*/ /*numWords*/ /*extraArgs*/,
-                ,
-                ,
-                ,
-                ,
+    function test_Fulfill_Reverts_When_Winner_Rejects_ETH() public onlyLocal {
+        WinnerCannotReceiveEth bad = new WinnerCannotReceiveEth();
 
-            ) = abi.decode(
-                    log.data,
-                    (uint256, uint256, uint16, uint32, uint32, bytes)
-                );
-            return requestId;
-        }
-        return 0;
+        // Enter ONLY the bad winner so they’re index 0
+        hoax(address(bad), STARTING_BALANCE);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + raffle.getInterval() + 1);
+        vm.roll(block.number + 1);
+
+        // Request randomness
+        vm.recordLogs();
+        raffle.performUpkeep("");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        uint256 requestId = _findVRFRequestIdFromCoordinatorLogs(
+            logs,
+            raffle.getVrfCoordinator()
+        );
+
+        // vm.expectRevert(Raffle.Raffle__transferFailed.selector);
+        VRFCoordinatorV2_5Mock(raffle.getVrfCoordinator()).fulfillRandomWords(
+            requestId,
+            address(raffle)
+        );
+
+        // minimal assert: payout failed -> raffle stayed CALCULATING
+        assertEq(
+            uint256(raffle.getRaffleState()),
+            1,
+            "should remain CALCULATING"
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -439,10 +470,9 @@ contract RaffleTest is Test, CodeConstants {
         onlyLocal
     {
         // Arrange: enter once, then make time pass so upkeep will succeed
-        uint256 fee = raffle.getEntranceFee();
         hoax(address(0xB0B), 1 ether);
-        raffle.enterRaffle{value: fee}();
-        vm.warp(block.timestamp + raffle.getInterval() + 1);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + 32);
         vm.roll(block.number + 1);
 
         // Act: move state to CALCULATING
@@ -474,3 +504,10 @@ contract RaffleTest is Test, CodeConstants {
         assertTrue(remaining <= interval, "remaining must be <= interval");
     }
 }
+
+// //this contract is used to test the customer error Raffle__transferFailed() when sending ETH to a winner that does not accept it
+// contract WinnerCannotReceiveEth {
+//     receive() external payable {
+//         revert("test"); // Any ETH sent will revert
+//     }
+// }
