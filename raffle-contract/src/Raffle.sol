@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
+//after 0.8.0 built-in overflow/underflow checks, Custom errors, Immutable/constant improvements
 
 /**
  * @title Raffle Contract
@@ -8,11 +9,16 @@ pragma solidity ^0.8.19;
  *         the contract automatically will randomly select a winner using Chainlink VRF.
  * @dev Implements Chainlink VRFv2.5 and Keepers
  */
-import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol"; //Base contract that gives your contract access to the fulfillRandomWords() callback
-import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol"; // Library that provides helper functions for VRF requests, that builds the request in memory (RandomWordsRequest struct + encoding extraArgs)
-import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol"; // Interface to talk to the actual Chainlink Coordinator contract deployed on-chain. which allows us to request random words.
-import {AutomationCompatibleInterface} from "@chainlink/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol"; //Base contract from Chainlink VRF v2.5 for consumers. It gives my contract access to the fulfillRandomWords() callback that Chainlink calls with verified randomness.
+//Wires my contract to the right coordinator and enforces that only the coordinator can call your fulfillment function.
+import {VRFV2PlusClient} from "@chainlink/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol"; //A helper library that defines the RandomWordsRequest struct and encodes extraArgs.
+//I need it bcs I built the VRF request using the RandomWordsRequest struct, which is defined in this library.
+import {IVRFCoordinatorV2Plus} from "@chainlink/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol"; //The interface for the on-chain VRF Coordinator contract.
+//it lets my contract call the coordinator to requestRandomWords(...)
+import {AutomationCompatibleInterface} from "@chainlink/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol"; //The interface for Chainlink Automation
+//Defines the expected function signatures for checkUpkeep(bytes) and performUpkeep(bytes).
 
+//inherits so my contract becomes a trusted VRF consumer with a secure fulfillRandomWords callback that only the Coordinator can call.
 contract Raffle is VRFConsumerBaseV2Plus {
     // Custom Errors
     error Raffle__NotEnoughEthSent();
@@ -39,7 +45,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private s_lastTimeStamp; //this will be a number that represents the last time the raffle was drawn
 
     // Chainlink VRF related variables
-    IVRFCoordinatorV2Plus private immutable i_vrfCoordinator; // what is that vrf? is the interface to the Chainlink VRF Coordinator contract
+    IVRFCoordinatorV2Plus private immutable i_vrfCoordinator; //store the VRF Coordinator address, this variable is “phone line” to the actual VRF Coordinator deployed on blockchain.
     bytes32 private immutable i_keyHash; // gas lane
     uint256 private immutable i_subscriptionId; // subscription ID for the VRF Coordinator
     uint16 private constant REQUEST_CONFIRMATIONS = 3; // Number of confirmations the Chainlink VRF Coordinator waits before responding to a request
@@ -51,7 +57,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
     event WinnerPicked(address indexed winner); // fulfillRandomWords() emits this event when a winner is picked
     event RequestedRaffleWinner(uint256 indexed requestId); // performUpkeep() emits this event when a request for random words is made
 
-    //contructor also has the VRFConsumerBaseV2Plus constructor, which takes the VRF Coordinator address as an argument
+    //constructor also has the VRFConsumerBaseV2Plus constructor, which takes the VRF Coordinator address as an argument
+    //
     constructor(
         uint256 entranceFee,
         uint256 interval,
@@ -60,12 +67,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 subscriptionId,
         uint32 callbackGasLimit
     ) VRFConsumerBaseV2Plus(_vrfCoordinator) {
+        //I pass the Coordinator address to the VRFConsumerBaseV2Plus so only that address can call my fulfillRandomWords callback
+
         // Initialize state variables
         i_entranceFee = entranceFee;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
         s_raffleState = RaffleState.OPEN;
+
         // Initialize VRF variables
+        //I keep an IVRFCoordinatorV2Plus reference to call requestRandomWords
         i_vrfCoordinator = IVRFCoordinatorV2Plus(_vrfCoordinator);
         i_keyHash = keyHash;
         i_subscriptionId = subscriptionId;
@@ -87,7 +98,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     // Function to check if requesting a winner is needed, if yes will run performUpkeep by Chainlink Keepers
-    // This function is only used by Chainlink to know when to call performUpkeep()
+    // This function is only used by Chainlink automation to know when to call performUpkeep()
     // It checks if the raffle: is currently open, enough time has passed, if there are any players, and if the contract has a balance
     // The function is public view, meaning it can be called externally to check the state of the raffle
     function checkUpkeep(
@@ -102,12 +113,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
         // performData is not used in this case, so we return an empty bytes array
     }
 
-    // Function called by Chainlink Keepers when upkeepNeeded returns true, this is the function that Chainlink Keepers will call to perform the upkeep
+    // Function called by Chainlink Keepers/Automation when upkeepNeeded returns true to perform the upkeep
     // If upkeep is needed, it changes the raffle state to CALCULATING and requests random words from the VRF Coordinator
     function performUpkeep(bytes calldata /* performData */) external {
         (bool upkeepNeeded, ) = checkUpkeep(""); // other require(upkeepNeeded, "Upkeep not needed");
-
-        // log linkBal to confirm it’s > 0
 
         if (!upkeepNeeded) {
             revert Raffle__UpkeepNotNeeded(

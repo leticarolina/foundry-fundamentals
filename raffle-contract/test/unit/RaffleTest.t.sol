@@ -209,6 +209,7 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
         uint256 currentPlayers = 0; // no players have entered yet
         Raffle.RaffleState currentRaffleState = raffle.getRaffleState(); // should be OPEN
 
+        //errors with parametrs → must abi.encodeWithSelector(selector, params…).
         vm.expectRevert(
             abi.encodeWithSelector(
                 Raffle.Raffle__UpkeepNotNeeded.selector,
@@ -229,7 +230,7 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
 
         // Act
         vm.recordLogs(); // this tells Foundry: “start capturing all EVM logs (events) emitted until I call vm.getRecordedLogs().” records all the logs that happen during the next call
-        raffle.performUpkeep(""); // calls the VRF coordinator mock > mock emits its own events (e.g., RandomWordsRequested) , my contract emits RequestedRaffleWinner(requestId)
+        raffle.performUpkeep(""); // calls the VRF coordinator that emits its own events (e.g., RandomWordsRequested) , my contract emits RequestedRaffleWinner(requestId)
 
         //vm.getRecordedLogs() returns an array of all logs emitted during that call (both from my contract and from the coordinator mock)
         Vm.Log[] memory entries = vm.getRecordedLogs(); // get the recorded logs on the last call
@@ -259,7 +260,7 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
     {
         //this is using a manually generated random requestId
         //A valid requestId exists only after raffle calls performUpkeep() and the coordinator accepts the request.
-        //testing that fulfillRandomWords() can only be called after performUpkeep() has been called, and performUpkeep() has not been called yet
+        //I am testing that fulfillRandomWords() can only be called after performUpkeep(), and performUpkeep() has not been called yet
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
             0, ///this is using a random requestId, fuzzing the input
@@ -273,9 +274,9 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
         onlyLocal
     {
         // Arrange
-        address expectedWinner = address(1);
+        address expectedWinner = address(1); //address(1) is handly chosen winner?
         uint256 additionalEntrants = 3; //4 players in total
-        uint256 startingIndex = 1; // start from index 1 because index 0 is the PLAYER
+        uint256 startingIndex = 1; //loop starts from index 1 because index 0 is the PLAYER from raffleEntered modifier
         for (
             uint256 i = startingIndex;
             i < startingIndex + additionalEntrants;
@@ -287,7 +288,7 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
         }
 
         uint256 startingTimeStamp = raffle.getLastTimeStamp(); // get the starting timestamp before we warp time
-        uint256 winnerStartingBalance = expectedWinner.balance;
+        uint256 winnerStartingBalance = expectedWinner.balance; //winner balance before trnaferring prize
         vm.warp(block.timestamp + raffle.getInterval() + 1); // warp time so that the raffle can be drawn
         vm.roll(block.number + 1);
 
@@ -315,14 +316,13 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
             address(raffle)
         );
 
-        // Assert
         Raffle.RaffleState raffleState = raffle.getRaffleState();
         address recentWinner = raffle.getRecentWinner();
         uint256 winnerBalance = recentWinner.balance;
         uint256 endingTimeStamp = raffle.getLastTimeStamp(); // get the ending timestamp after the winner is picked
         uint256 prize = entranceFee * (additionalEntrants + 1); //prize is the entrance fee multiplied by the number of players (including the PLAYER) entranceFee * 4
         uint256 playersLength = raffle.getNumberOfPlayers(); // get the number of players
-
+        // Assert
         assert(uint256(raffleState) == 0); // raffle state should be OPEN again
         assert(expectedWinner == recentWinner);
         assert(winnerBalance == winnerStartingBalance + prize); // winner balance should be increased by the prize amount
