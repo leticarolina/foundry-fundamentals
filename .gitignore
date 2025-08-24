@@ -1,2 +1,20 @@
-cache/
-out/
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/.turbo/
+**/.vercel/
+
+# Foundry
+**/out/
+**/cache/
+**/broadcast/
+**/.env
+**/.env.*
+
+ignore Foundry libs if you don't want them tracked
+**/lib/
+
+# OS/Editor
+.DS_Store
+.vscode/
+

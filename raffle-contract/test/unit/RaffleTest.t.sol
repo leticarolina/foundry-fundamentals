@@ -274,7 +274,7 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
         onlyLocal
     {
         // Arrange
-        address expectedWinner = address(1); //address(1) is handly chosen winner?
+        address expectedWinner = address(1); //assuming the VRF mock after % players.length, will land on index 1
         uint256 additionalEntrants = 3; //4 players in total
         uint256 startingIndex = 1; //loop starts from index 1 because index 0 is the PLAYER from raffleEntered modifier
         for (
@@ -316,18 +316,19 @@ contract RaffleTest is Test, CodeConstants, BaseTest {
             address(raffle)
         );
 
-        Raffle.RaffleState raffleState = raffle.getRaffleState();
-        address recentWinner = raffle.getRecentWinner();
+        Raffle.RaffleState raffleState = raffle.getRaffleState(); //open after sending money succesfully
+        address recentWinner = raffle.getRecentWinner(); //addres (1) that I chose?
         uint256 winnerBalance = recentWinner.balance;
         uint256 endingTimeStamp = raffle.getLastTimeStamp(); // get the ending timestamp after the winner is picked
         uint256 prize = entranceFee * (additionalEntrants + 1); //prize is the entrance fee multiplied by the number of players (including the PLAYER) entranceFee * 4
         uint256 playersLength = raffle.getNumberOfPlayers(); // get the number of players
+
         // Assert
         assert(uint256(raffleState) == 0); // raffle state should be OPEN again
         assert(expectedWinner == recentWinner);
         assert(winnerBalance == winnerStartingBalance + prize); // winner balance should be increased by the prize amount
         assert(endingTimeStamp > startingTimeStamp); // ending timestamp should be greater than the starting timestamp
-        assert(playersLength == 0); // players array should be reset
+        assert(playersLength == 0); // players array should be reset to zero after prize is sent
     }
 
     function test_fulfillRandomWords_reverts_whenWinnerRejectsPrize()
