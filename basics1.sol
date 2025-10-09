@@ -33,7 +33,7 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //why debug keyword? It will show the line numbers and source code for each line of the coverage report, making it easier to understand which parts of the code are covered by tests and which are not.
 //cat coverage.txt | grep Raffle.sol -A 30 = read the file coverage.txt and search for the word Raffle.sol and show 30 lines after it
 //cat coverage.txt | grep Raffle.sol -A 40 > raffle_coverage.txt  = '' then save it to a new file called raffle_coverage.txt
-
+//forge remappings > remappings.txt = save the remappings to a file called remappings.txt
 //EXAMPLES FULL FORGE DEPLOYMENT OF 'SIMPLE STORAGE'
 
 //1.

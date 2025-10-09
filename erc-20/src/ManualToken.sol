@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
+error NotOwner();
+error ZeroAddress();
+error InsufficientBalance();
+error InsufficientAllowance();
 
 contract ManualToken {
     //---------------OWNER
-    address i_owner;
+    address public immutable i_owner;
+
     modifier onlyOwner() {
-        require(msg.sender == i_owner, "Only owner");
+        if (msg.sender != i_owner) revert NotOwner();
         _;
     }
 
@@ -102,10 +107,8 @@ contract ManualToken {
         uint256 subtractedValue
     ) external returns (bool) {
         uint256 current = s_allowance[msg.sender][spender];
-        require(
-            current >= subtractedValue,
-            "ERC20: decreased allowance below zero"
-        );
+
+        if (current < subtractedValue) revert InsufficientAllowance();
         _approve(msg.sender, spender, current - subtractedValue);
         return true;
     }
@@ -141,9 +144,9 @@ contract ManualToken {
     // -------------------- Internal helpers ------------
     // transfer logic with checks and event emission.
     function _transfer(address from, address to, uint256 amount) internal {
-        require(to != address(0), "ERC20: transfer to the zero address");
+        if (to == address(0)) revert ZeroAddress();
         uint256 fromBal = s_balances[from];
-        require(fromBal >= amount, "ERC20: transfer amount exceeds balance");
+        if (fromBal < amount) revert InsufficientBalance();
 
         // Effects
         s_balances[from] = fromBal - amount;
@@ -155,8 +158,7 @@ contract ManualToken {
 
     //Sets allowance and emits Approval.
     function _approve(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        if (owner == address(0) || spender == address(0)) revert ZeroAddress();
         s_allowance[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -168,7 +170,7 @@ contract ManualToken {
         uint256 amount
     ) internal {
         uint256 current = s_allowance[owner][spender];
-        require(current >= amount, "ERC20: insufficient allowance");
+        if (current < amount) revert InsufficientAllowance();
         // Effects
         s_allowance[owner][spender] = current - amount;
         // (No event for spending allowance; spec doesn't require it.)
@@ -176,7 +178,7 @@ contract ManualToken {
 
     //Creates `amount` tokens for `to`, increasing totalSupply and emitting Transfer(0, to, amount).
     function _mint(address to, uint256 amount) internal {
-        require(to != address(0), "ERC20: mint to the zero address");
+        if (to == address(0)) revert ZeroAddress();
         s_totalSupply += amount;
         s_balances[to] += amount;
         emit Transfer(address(0), to, amount);
@@ -184,9 +186,9 @@ contract ManualToken {
 
     //Logic for destrying `amount` tokens from `from`, decreasing totalSupply and emitting Transfer(from, 0, amount).
     function _burn(address from, uint256 amount) internal {
-        require(from != address(0), "ERC20: burn from the zero address");
+        if (from == address(0)) revert ZeroAddress();
         uint256 fromBal = s_balances[from];
-        require(fromBal >= amount, "ERC20: burn amount exceeds balance");
+        if (fromBal < amount) revert InsufficientBalance();
         s_balances[from] = fromBal - amount;
         s_totalSupply -= amount;
         emit Transfer(from, address(0), amount);
