@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Counter is Ownable {
+contract Box is Ownable {
     uint256 public number;
     address initialOwner;
 
