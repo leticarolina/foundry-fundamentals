@@ -10,7 +10,7 @@ contract DeployMerkleAirdrop is Script {
     MerkleAirdrop public merkleAirdrop;
     BlackBean public blackBean;
     bytes32 public ROOT =
-        0x943b3c6ac3580cdba39002a0d542b36497d89ab564419fdc318827270ebc2e74;
+        0x943b3c6ac3580cdba39002a0d542b36497d89ab564419fdc318827270ebc2e74; //from output of MakeMerkle.s.sol
     uint256 public INITIAL_MINT = 100e18;
 
     function run() external returns (MerkleAirdrop, BlackBean) {

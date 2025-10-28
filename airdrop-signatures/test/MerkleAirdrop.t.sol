@@ -10,12 +10,9 @@ import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol"
 contract MerkleAirdropTest is ZkSyncChainChecker, Test {
     MerkleAirdrop public merkleAirdrop;
     BlackBean public blackBean;
-    bytes32 proofOne =
-        0x0fd7c981d39bece61f7499702bf59b3114a90e66b51ba2c53abdf7b62986c00a;
-    bytes32 proofTwo =
-        0x1bb96f63c531e773ee0e7a465cf042becb72dfee0ba16636e73889917df51885;
-    bytes32 public immutable ROOT =
-        0x943b3c6ac3580cdba39002a0d542b36497d89ab564419fdc318827270ebc2e74;
+    bytes32 proofOne = 0x0fd7c981d39bece61f7499702bf59b3114a90e66b51ba2c53abdf7b62986c00a;
+    bytes32 proofTwo = 0x1bb96f63c531e773ee0e7a465cf042becb72dfee0ba16636e73889917df51885;
+    bytes32 public immutable ROOT = 0x943b3c6ac3580cdba39002a0d542b36497d89ab564419fdc318827270ebc2e74;
     uint256 public immutable AMOUNT_TO_CLAIM = 25 * 1e18;
     uint256 public immutable INITIAL_MINT = 100e18;
     bytes32[] public PROOF = [proofOne, proofTwo];
@@ -51,7 +48,7 @@ contract MerkleAirdropTest is ZkSyncChainChecker, Test {
         vm.stopPrank();
         //gaspayer calls the function on behalf of user
         vm.prank(gasPayer);
-        merkleAirdrop.claim(user, AMOUNT_TO_CLAIM, PROOF, v, r, s);
+        merkleAirdrop.claim(user, PROOF, v, r, s);
         uint256 endingBalance = blackBean.balanceOf(user);
 
         assertEq(endingBalance, startingBalance + AMOUNT_TO_CLAIM);

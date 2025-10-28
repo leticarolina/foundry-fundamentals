@@ -53,8 +53,7 @@ deploy:
 	@forge script script/DeployMerkleAirdrop.s.sol:DeployMerkleAirdrop $(NETWORK_ARGS)
 
 deploy-sepolia: 
-	forge script script/DeployMerkle.s.sol:DeployMerkleAirdrop --rpc-url $SEPOLIA_RPC --private-key $SEPOLIA_PK --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv 
-
+	forge script script/DeployMerkleAirdrop.s.sol:DeployMerkleAirdrop --rpc-url https://eth-sepolia.g.alchemy.com/v2/hr0u6gssX4yzR3YaMJd5n29e7Cwk79LT --private-key $SEPOLIA_PK --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY
 # As of writing, the Alchemy zkSync RPC URL is not working correctly 
 deploy-zk:
 	forge create src/MerkleAirdrop.sol:MerkleAirdrop --rpc-url http://127.0.0.1:8011 --private-key ${DEFAULT_ZKSYNC_LOCAL_KEY} --constructor-args ${ROOT} $(shell forge create src/BagelToken.sol:BagelToken --rpc-url http://127.0.0.1:8011 --private-key ${DEFAULT_ZKSYNC_LOCAL_KEY} --legacy --zksync | grep "Deployed to:" | awk '{print $$3}') --legacy --zksync

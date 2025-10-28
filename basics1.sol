@@ -47,7 +47,7 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 
 //3.
 //forge deploy with cast wallet import
-//forge script script/DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --account anvilWallet --sender 0x70997970c51812dc3a010c7d01b50e0d17dc79c8 --broadcast
+//forge script script/cd DeploySimpleStorage.s.sol --rpc-url http://127.0.0.1:8545 --account anvilWallet --sender 0x70997970c51812dc3a010c7d01b50e0d17dc79c8 --broadcast
 // it will prompt to insert the password for the wallet, and then deploy the contract using the specified account.
 //PS only forge supports the --account, --sender, and --broadcast options for deploying and interacting with smart contracts using named accounts. cast does not but can use --interactive
 // forge can use secure wallets (--account) from ERC-2335 keystore files and prompts for password — perfect for deploys and interactions via scripts.
@@ -91,6 +91,18 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //The output will be hashed and returned as a hexadecimal string, which can be decoded to get the actual values.
 //to decode the abi data
 //cast abi-decode "tuple(uint256,string)" pasteHex/ABI
+
+//signing messages with cast
+//cast call <contract_address> "<function_signature>" <arguments> --rpc-url --private-key
+//cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getMessageHash(address, uint256)" arg1 arg2 --rpc-url http://localhost:8545 
+//this returned message hash: 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a 
+//after getting the message hash, we can sign it
+//cast wallet sign --no-hash <message_hash> --private-key <private_key>
+//cast wallet sign 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a --private-key 0xdd4rr4...OrEnvOr--account
+// this returned the signature: 0xcb9c76894253dcc479ded48d675f2d377b47e4a26fb84df1720aedc78475b2243e3d91f574c0189df142aca740d1b17ed500b87f21bd300f1b067192a17b79c81c
+//when using cast wallet sign we get one single signature string
+//this signature we remove the 0x and split it in r,s,v to be used in the claim function
+//--no-has because I already have done byte32 message hash so no need to hash again
 
 //========== ANVIL
 //deploying with forge/anvil

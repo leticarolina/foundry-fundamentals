@@ -8,8 +8,8 @@ import {console} from "forge-std/console.sol";
 /**
  * @title Merkle tree input file generator script
  * @notice This script’s sole job is to create the raw input JSON file that describes who gets tokens and how much each address receives.
- * @dev Maintains over-collateralization, liquidation if HF < 1.
- * @dev liquidate function users can call in case their collateral goes way too down
+ * @dev This is the source of truth the Merkle tree will be built from. Edit addresses/amounts here before each new distribution.
+ * @dev Builds the whitelist dataset off-chain: an ordered list of (address, amount) pairs.
  */
 contract GenerateInput is Script {
     uint256 private constant AMOUNT = 25 * 1e18;

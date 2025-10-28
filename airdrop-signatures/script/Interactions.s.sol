@@ -9,18 +9,14 @@ contract ClaimAirdrop is Script {
     error ClaimAirdrop__InvalidSignatureLength();
     address CLAIMING_ADDRESS = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     uint256 public immutable CLAIMING_AMOUNT = 25 * 1e18;
-    bytes32 immutable PROOF_ONE =
-        0xd1445c931158119b00449ffcac3c947d028c0c359c34a6646d95962b3b55c6ad;
-    bytes32 immutable PROOF_TWO =
-        0x1bb96f63c531e773ee0e7a465cf042becb72dfee0ba16636e73889917df51885;
+    bytes32 immutable PROOF_ONE = 0xd1445c931158119b00449ffcac3c947d028c0c359c34a6646d95962b3b55c6ad;
+    bytes32 immutable PROOF_TWO = 0x1bb96f63c531e773ee0e7a465cf042becb72dfee0ba16636e73889917df51885;
     bytes32[] proof = [PROOF_ONE, PROOF_TWO];
 
     bytes private SIGNATURE =
         hex"12e145324b60cd4d302bfad59f72946d45ffad8b9fd608e672fd7f02029de7c438cfa0b8251ea803f361522da811406d441df04ee99c3dc7d65f8550e12be2ca1c";
 
-    function sliptSignature(
-        bytes memory sig
-    ) public pure returns (uint8 v, bytes32 r, bytes32 s) {
+    function sliptSignature(bytes memory sig) public pure returns (uint8 v, bytes32 r, bytes32 s) {
         // require(sig.length == 65, "Wrong sig lenth");
         if (sig.length != 65) {
             revert ClaimAirdrop__InvalidSignatureLength();
@@ -36,29 +32,21 @@ contract ClaimAirdrop is Script {
     }
 
     function run() external {
-        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment(
-            "MerkleAirdrop",
-            block.chainid
-        );
+        //Loads the most recent MerkleAirdrop address from broadcasts
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("MerkleAirdrop", block.chainid);
         vm.startBroadcast();
+        //Splits a precomputed signature into (v,r,s) to pass into claim()
         (uint8 v, bytes32 r, bytes32 s) = sliptSignature(SIGNATURE);
-        MerkleAirdrop(mostRecentlyDeployed).claim(
-            CLAIMING_ADDRESS,
-            CLAIMING_AMOUNT,
-            proof,
-            v,
-            r,
-            s
-        );
+        MerkleAirdrop(mostRecentlyDeployed).claim(CLAIMING_ADDRESS, proof, v, r, s);
         vm.stopBroadcast();
     }
 }
 
 /**
- * deploy contracts 
+ * deploy contracts
  * == Return ==
-  0: contract MerkleAirdrop 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  1: contract BlackBean 0x5FbDB2315678afecb367f032d93F642f64180aa3  
+ *   0: contract MerkleAirdrop 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+ *   1: contract BlackBean 0x5FbDB2315678afecb367f032d93F642f64180aa3
  * first, get message to sign
  * cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getMessageHash(address, uint256)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 25000000000000000000 --rpc-url http://localhost:8545
  * 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a
@@ -72,11 +60,11 @@ contract ClaimAirdrop is Script {
  *   --rpc-url http://localhost:8545 \
  *   --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
  *   --broadcast
- * 
+ *
  * check balance of the user
  * cast call 0xA1B701E58cCbde8AfE4Cc2aA689513C5030CcED4 "balanceOf(address)" 0x76Cdd5a850a5B721A4f8285405d8a7ab5c3fc7E4 --rpc-url http://localhost:8545
  * 0x0000000000000000000000000000000000000000000000015af1d78b58c40000
- * 
+ *
  * convert hash to decimal
  * cast to-dec 0x0000000000000000000000000000000000000000000000015af1d78b58c40000
  * 25000000000000000000

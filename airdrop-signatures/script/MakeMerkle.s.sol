@@ -16,10 +16,12 @@ import {ScriptHelper} from "murky/script/common/ScriptHelper.sol";
 /**
  * @title MakeMerkle
  * @author Cyfrin
- *
  * Original Work by:
  * @author kootsZhin
  * @notice https://github.com/dmfxyz/murky
+ * @dev This script reads an input JSON file containing addresses and amounts, It converts every address–amount pair into a Merkle leaf
+ * generates each claimer’s proof array (path from leaf → root) and the Merkle root.
+ * @dev The hashing formula must match the contract: leaf = keccak256( bytes.concat( keccak256(abi.encode(account, amount)) ) );
  */
 
 contract MakeMerkle is Script, ScriptHelper {
