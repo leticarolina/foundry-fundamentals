@@ -13,8 +13,15 @@ contract DeployBox is Script {
 
     function deployBox() public returns (address) {
         vm.startBroadcast();
-        BoxV1 box = new BoxV1(); //Deploy the logic (implementation) contract
+        //1. Deploy the logic (implementation) contract
+        BoxV1 box = new BoxV1();
+
+        // 2. Deploy proxy that points to that implementation
+        // ERC1967Proxy constructor takes: implementation address, some init call data (bytes) to run immediately
         ERC1967Proxy proxy = new ERC1967Proxy(address(box), ""); // Encode the initializer call (replaces constructor)
+
+        // 3. Manually call initialize() on the proxy instance
+
         BoxV1(address(proxy)).initialize(); // Deploy the proxy pointing to the implementation
         vm.stopBroadcast();
         return address(proxy);
