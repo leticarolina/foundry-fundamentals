@@ -79,8 +79,8 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //This command sends a transaction to the contract at address `0x71C95911E9a5D330f4D621842EC243EE1343292e`
 //to call the `addPerson` function with the arguments `"Leticia"` and `7`.
 
-//interacting/calling a function that does not change the state of the contract
-//cast call <contract_address> "<function_signature>" <arguments>
+//--------interacting/calling a function that does not change the state of the contract
+//cast call <contract_address> "<function_signature_returns>" <arguments>
 //cast call 0x71C95911E9a5D330f4D621842EC243EE1343292e "getPerson(uint256)(uint256,string)" 0
 //returns 7 "Leticia"
 //This command calls the `getPerson` function of the contract with the argument `0`
@@ -91,11 +91,12 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //The output will be hashed and returned as a hexadecimal string, which can be decoded to get the actual values.
 //to decode the abi data
 //cast abi-decode "tuple(uint256,string)" pasteHex/ABI
+//command call is to write to the blockchain
 
 //signing messages with cast
 //cast call <contract_address> "<function_signature>" <arguments> --rpc-url --private-key
-//cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getMessageHash(address, uint256)" arg1 arg2 --rpc-url http://localhost:8545 
-//this returned message hash: 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a 
+//cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getMessageHash(address, uint256)" arg1 arg2 --rpc-url http://localhost:8545
+//this returned message hash: 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a
 //after getting the message hash, we can sign it
 //cast wallet sign --no-hash <message_hash> --private-key <private_key>
 //cast wallet sign 0x39430e4990aa8a1f7d056d9a5f611eb27f8280425efbf03634690a02f26b957a --private-key 0xdd4rr4...OrEnvOr--account
@@ -104,6 +105,10 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //this signature we remove the 0x and split it in r,s,v to be used in the claim function
 //--no-has because I already have done byte32 message hash so no need to hash again
 
+//cast calldata-decode "depositETH(address,address,uint16)" <hex>
+//This command decodes the provided hexadecimal calldata according to the specified function signature.
+//it will return the decoded parameters in a human-readable format. you’re not executing anything on-chain, you’re just decoding raw bytes locally.
+
 //========== ANVIL
 //deploying with forge/anvil
 //anvil - Create a local testnet node for deploying and testing smart contracts. It can also be used to fork other EVM compatible networks.
@@ -111,13 +116,15 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //forge create <path>/<contractname> --rpc-url --interactive --broadcast
 //(e.g. forge create SimpleStorage --rpc-url http://127.0.0.1:8545 --interactive --broadcast)
 //Additionally the --broadcast flag is for publishing your transaction to the network as a safety precaution and mirrors the --broadcast flag of forge script.
-//If you do not pass the --broadcast flag your transaction is a dry-run. without broadcast keyword it wont send it will simulate sending.
+//If you do not pass the --broadcast flag your transaction wont send it will simulate sending. ONLY FOR SCRIPTS, cast send no need --broadcast
+//without --broadcast Foundry simulates all the transactions locally (inside the Forge scripting VM)
+//It shows you what would happen — gas costs, addresses, logs — but it does not actually send those transactions to the RPC network. Great for “dry runs” or debugging
 
 //anvil --fork-url <url> --fork-block-number <block_number> --port <port>
 //This command starts an Anvil node that forks from the specified URL at the given block number
 //and listens on the specified port. This allows you to test your smart contracts against a specific
 //state of the Ethereum network, which is useful for debugging and testing purposes.
-
+//That behavior is the same no matter what the network is — Anvil, Sepolia, Mainnet, doesn’t matter.
 //========== CHISAL
 
 //=============== Scripts =====================

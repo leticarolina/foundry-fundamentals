@@ -19,12 +19,12 @@ It uses a `BoxV1` contract that stores a single number, and an upgraded `BoxV2` 
 
 ## 🧱 Project Structure
 
-├── src/
-│ ├── BoxV1.sol # First implementation (UUPS)
-│ ├── BoxV2.sol # Second implementation with new variables
-├── script/
-│ ├── DeployBox.s.sol # Deploys implementation + proxy + initializes
-│ ├── UpgradeBox.s.sol # Upgrades proxy to new implementation
+- src/
+BoxV1.sol # First implementation (UUPS)
+BoxV2.sol # Second implementation with new variables
+- script/
+DeployBox.s.sol # Deploys implementation + proxy + initializes
+UpgradeBox.s.sol # Upgrades proxy to new implementation
 
 ---
 

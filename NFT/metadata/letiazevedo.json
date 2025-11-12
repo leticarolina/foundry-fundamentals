@@ -1,0 +1,23 @@
+{
+    "name": "Leticia Azevedo NFT #1",
+    "description": "Persona NFT created for learning IPFS integration with Solidity.",
+    "image": "ipfs://QmcHBQJ8jtRESe5KoBThn1Pk5HBUqt3sEpwrZrPS3Qvf5P",
+    "attributes": [
+        {
+            "trait_type": "Persona",
+            "value": "Leticia Azevedo, a web3 developer"
+        },
+        {
+            "trait_type": "Traits",
+            "value": "curly hair and tanned skin"
+        },
+        {
+            "trait_type": "Vibe",
+            "value": "Confident"
+        },
+        {
+            "trait_type": "Background",
+            "value": "Warm orange"
+        }
+    ]
+}
