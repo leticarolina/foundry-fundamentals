@@ -1,0 +1,11 @@
+{
+    "name": "Mood NFT",
+    "description": "An NFT that reflects your mood — thoughtful and quiet today.",
+    "attributes": [
+        {
+            "trait_type": "Mood",
+            "value": "SAD"
+        }
+    ],
+    "image": "ipfs://Qmagh47uvk6XP8RZX6SYD1BTgV8RRP9SvB2S5bw8Yt6YQh"
+}

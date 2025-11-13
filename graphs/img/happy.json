@@ -1,0 +1,11 @@
+{
+    "name": "Mood NFT",
+    "description": "An NFT that reflects your mood — always smiling on the bright side.",
+    "attributes": [
+        {
+            "trait_type": "Mood",
+            "value": "HAPPY"
+        }
+    ],
+    "image": "ipfs://QmZQCawsWtrnMuxcQCukvhKFe64pewjuopQghfbGvzHqJX"
+}

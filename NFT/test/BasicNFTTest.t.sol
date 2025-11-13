@@ -60,3 +60,8 @@ contract LeticiaNFTTest is Test {
         leticiaNft.mintNft();
     }
 }
+
+//contract address on Sepolia:
+//https://sepolia.etherscan.io/address/0x301850dFdFf5AfBD4d7b8032D60908e4AD9eEE49
+//corrected version with ID count starting at 0
+//https://sepolia.etherscan.io/address/0x79AfAf6b21C00E4F244E7533749C406aea0318Bb
