@@ -8,9 +8,10 @@ import {Initializable} from "../lib/openzeppelin-contracts-upgradeable/contracts
 // external initializer function, usually called `initialize`. It then becomes necessary to protect this initializer
 // function so it can only be called once. The {initializer} modifier provided by this contract will have this effect.
 import {OwnableUpgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+
 //same idea as OpenZeppelin’s Ownable, but safe for upgradeable contracts
 
-//Implementation #1 
+//Implementation #1
 // deploy implementation > deploy proxy > call initialize() on the proxy (acts like the constructor)
 contract BoxV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 internal number; //storage lives in the proxy
@@ -19,8 +20,8 @@ contract BoxV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers(); //it says dont let any initializations happens
         //or could just not have this constructor at all
     }
-    
-    //This acts like “constructor” for the proxy instance.
+
+    //This acts like “constructor” for the proxy.
     //this is in case we do want a constructor, initalize func is the constructor for proxies
     //after deployment contract will immediately call this function
     //tipically initializer funcs has __
@@ -38,7 +39,7 @@ contract BoxV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     function getVersion() external pure returns (string memory) {
         return "v1";
     }
-    
+
     //This function is REQUIRED by UUPSUpgradeable.
     //Whenever someone calls upgradeToAndCall, OZ will internally call _authorizeUpgrade.
     //By making it onlyOwner: Only the owner can upgrade the proxy to point at a new implementation.

@@ -13,6 +13,11 @@ contract BoxV2 is UUPSUpgradeable, OwnableUpgradeable {
     string internal name;
     uint256 internal timestamp;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function setBox(uint256 _number, string memory _name) external {
         number = _number;
         name = _name;

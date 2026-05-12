@@ -109,6 +109,9 @@ deployed to sepolia but via alchemy rpc-url: https://sepolia.etherscan.io/tx/0x8
 //This command decodes the provided hexadecimal calldata according to the specified function signature.
 //it will return the decoded parameters in a human-readable format. you’re not executing anything on-chain, you’re just decoding raw bytes locally.
 
+//cas call vs cast send
+//cast call = Executes a read-only call (view / pure) on a contract.
+//cast send = Sends a real transaction to the network, invoking a non-view function.
 //========== ANVIL
 //deploying with forge/anvil
 //anvil - Create a local testnet node for deploying and testing smart contracts. It can also be used to fork other EVM compatible networks.
